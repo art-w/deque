@@ -78,4 +78,9 @@ and test_repeatedly n t =
   else let n, t = test n t in
        test_repeatedly (n - 1) t
 
-let () = ignore (test_repeatedly 1000 D2.empty)
+let () =
+  let s, d = test_repeatedly 1000 D2.empty in
+  let xs = Deque.Steque.to_list s in
+  let ys = Deque.Deck.to_list d in
+  assert (xs = ys) ;
+  assert (List.length xs = Deque.Steque.length s)

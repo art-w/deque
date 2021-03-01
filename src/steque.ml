@@ -30,7 +30,7 @@ let fold_left
         let z = go (go_pair f) z c kont in
         list_of_suffix f z s
 
-  and go_pair 
+  and go_pair
   : type b. (z -> b -> z) -> z -> b pair -> z
   = fun f z (Pair (p, k)) ->
     let z = fold_prefix f z p in
@@ -49,6 +49,53 @@ let fold_left
 
   go_kont f z t
 
-let to_list t = List.rev (fold_left (fun z x -> x :: z) [] t)
+let fold_right
+: type a z. (a -> z -> z) -> a t -> z -> z
+= fun f (T t) z ->
+
+  let fold_prefix
+  : type b c. (b -> z -> z) -> (b, c) prefix -> z -> z
+  = fun f p z ->
+    match p with
+  | P2 (a, b) -> f a (f b z)
+  | P3 (a, b, c) -> f a (f b (f c z))
+  | P4 (a, b, c, d, deq) ->
+      let z = Dequeue.fold_right f deq z in
+      f a (f b (f c (f d z)))
+  in
+
+  let list_of_suffix f s z = Dequeue.fold_right f s z in
+
+  let rec go
+  : type b1 b2 c1 c2 k.
+    (b1 -> z -> z) -> (b1, b2, c1, k) steque -> z -> (b2, c2) kont -> z
+  = fun f steque z kont ->
+    match steque with
+    | KONT -> go_kont f kont z
+    | Triple (p, c, s) ->
+        let z = list_of_suffix f s z in
+        let z = go (go_pair f) c z kont in
+        fold_prefix f p z
+
+  and go_pair
+  : type b. (b -> z -> z) -> b pair -> z -> z
+  = fun f (Pair (p, k)) z ->
+    let z = go_kont (go_pair f) k z in
+    fold_prefix f p z
+
+  and go_kont
+  : type b c. (b -> z -> z) -> (b, c) kont -> z -> z
+  = fun f kont z ->
+    match kont with
+    | Suffix s -> list_of_suffix f s z
+    | Y (c, k) -> go f c z k
+    | Yr (c, k) -> go f c z k
+    | R (c, k) -> go f c z k
+    | G (c, k) -> go f c z k
+  in
+
+  go_kont f t z
+
+let to_list t = fold_right (fun x xs -> x :: xs) t []
 
 let length t = fold_left (fun z _ -> z + 1) 0 t
