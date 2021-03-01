@@ -133,7 +133,7 @@ and fold_triple_nh
       let acc = fold_deque (fold_stored_triple f) acc c in
       buffer_fold_left f acc s
 
-and fold_stored_triple 
+and fold_stored_triple
 : type acc a. (acc -> a -> acc) -> acc -> a stored_triple -> acc
 = fun f acc stored ->
   match stored with

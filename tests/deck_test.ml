@@ -470,19 +470,16 @@ and g_path_only
 : type a. a m -> (a, only) g_path m
 = fun e ->
   Nest (fun () -> only_yellow_green e >>= fun y -> return (G_path y))
- 
 
 and g_path_left
 : type a. a m -> (a, left) g_path m
 = fun e ->
   Nest (fun () -> left_yellow_green e >>= fun p -> return (G_path p))
- 
 
 and g_path_right
 : type a. a m -> (a, right) g_path m
 = fun e ->
   Nest (fun () -> right_yellow_green e >>= fun y -> return (G_path y))
- 
 
 and semiregular
 : type a. a m -> a semi m
@@ -492,8 +489,6 @@ and semiregular
    return (S Void)
    @ ( gr_deque e >>= fun (GR_deq d) -> return (S (T d)) )
   )
-  
-
 
 and regular
 : type a. a m -> a t m

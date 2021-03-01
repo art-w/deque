@@ -94,7 +94,7 @@ module Buffer : sig
 
   val cons6 : 'a six -> ('a, 'n) t -> ('a, 'n ge6) t
   val snoc6 : ('a, 'n) t -> 'a six -> ('a, 'n ge6) t
-  
+
   val snoc8 : ('a, 'n) t -> 'a eight -> ('a, 'n ge8) t
 
   val cons_vector : ('a, _) vector -> ('a, 'n) t -> ('a, 'n) t
@@ -355,22 +355,22 @@ and ('a, 'b, 'color, 'kind, 'hole_loc, 'is_hole, 'has_hole) triple =
            ('a, _ ge5) prefix
          * ('a, eq2) suffix
         -> ('a, 'b, [`green], left, nh, nh, nh) triple
-  | Left_green : 
+  | Left_green :
            ('a, _ ge8) prefix
          * ('a stored_triple, [< `green | `red]) deque
          * ('a, eq2) suffix
         -> ('a, 'b, [`green], left, nh, nh, nh) triple
-  | Left_yellow : 
+  | Left_yellow :
            ('a, _ ge7) prefix
          * ('a stored_triple, 'b, preferred_left, 'hole) not_empty
          * ('a, eq2) suffix
         -> ('a, 'b, [`yellow], left, 'hole, nh, has_hole) triple
-  | Left_orange : 
+  | Left_orange :
            ('a, _ ge6) prefix
          * ('a stored_triple, 'b, preferred_right, 'hole) not_empty
          * ('a, eq2) suffix
         -> ('a, 'b, [`orange], left, 'hole, nh, has_hole) triple
-  | Left_red : 
+  | Left_red :
            ('a, _ ge5) prefix
          * ('a stored_triple, [`green]) deque
          * ('a, eq2) suffix
@@ -380,22 +380,22 @@ and ('a, 'b, 'color, 'kind, 'hole_loc, 'is_hole, 'has_hole) triple =
            ('a, eq2) prefix
          * ('a, _ ge5) suffix
         -> ('a, 'b, [`green], right, nh, nh, nh) triple
-  | Right_green : 
+  | Right_green :
            ('a, eq2) prefix
          * ('a stored_triple, [< `green | `red]) deque
          * ('a, _ ge8) suffix
         -> ('a, 'a, [`green], right, nh, nh, nh) triple
-  | Right_yellow : 
+  | Right_yellow :
            ('a, eq2) prefix
          * ('a stored_triple, 'b, preferred_left, 'hole) not_empty
          * ('a, _ ge7) suffix
         -> ('a, 'b, [`yellow], right, 'hole, nh, has_hole) triple
-  | Right_orange : 
+  | Right_orange :
            ('a, eq2) prefix
          * ('a stored_triple, 'b, preferred_right, 'hole) not_empty
          * ('a, _ ge6) suffix
         -> ('a, 'b, [`orange], right, 'hole, nh, has_hole) triple
-  | Right_red : 
+  | Right_red :
            ('a, eq2) prefix
          * ('a stored_triple, [`green]) deque
          * ('a, _ ge5) suffix
@@ -662,7 +662,7 @@ let no_pref
 = fun d1 ght ->
   match d1 with
   | Only_of ri ->
-      Only_path (Path (ri, ght)) 
+      Only_path (Path (ri, ght))
   | Pair_right (left, ri) ->
       Pair_red (left, Path (ri, ght))
 

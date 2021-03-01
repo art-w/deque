@@ -10,15 +10,15 @@ end
 
 module Naive = struct
   type 'a t = 'a list
-  
+
   let empty = []
-  
+
   let cons x t = x :: t
-  
+
   let uncons = function
     | []   -> None
     | x::t -> Some (x, t)
-  
+
   let unsnoc t =
     let rec go acc = function
       | []   -> None
@@ -26,15 +26,15 @@ module Naive = struct
       | x::t -> go (x::acc) t
     in
     go [] t
-  
+
   let rec rev_concat a b = match a with
     | [] -> b
     | x::xs -> rev_concat xs (x::b)
-  
+
   let concat a b = rev_concat (List.rev a) b
-  
+
   let snoc t x = concat t [x]
-  
+
   let to_list t = t
 end
 

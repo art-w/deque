@@ -224,7 +224,7 @@ let green_suffix_concat
   | Ok buf2 -> Yellowish buf1, buf2
   | Underflow opt ->
       let buf1, ab = green_unsnoc buf1 in
-      buf1, suffix23 ab opt 
+      buf1, suffix23 ab opt
   | Overflow (buf2, ab) ->
       Yellowish (green_suffix_snoc buf1 ab), buf2
 
@@ -246,7 +246,7 @@ let suffix_concat buf1 buf2 =
       Any buf1, buf2
   | Underflow opt ->
       let buf1, ab = yellow_unsnoc buf1 in
-      buf1, suffix23 ab opt 
+      buf1, suffix23 ab opt
   | Overflow (buf2, ab) ->
       yellow_suffix_snoc buf1 ab, buf2
 

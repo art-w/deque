@@ -1,4 +1,4 @@
-(* 
+(*
    "Bridging the algorithm gap: A linear-time functional
     program for paragraph formatting"
    by Oege de Moor and Jeremy Gibbons
@@ -77,14 +77,14 @@ let rec drop_while p xs = match Deque.uncons xs with
 
 let nbr_chars position p q =
   (* returns the smallest [i] such that:
-    
+
       futur_cost (position + i) p  >=  futur_cost (position + i) q
   ===
-      p.cost + square (remaining position p - i) 
-      >= q.cost + square (remaining position q - i) 
+      p.cost + square (remaining position p - i)
+      >= q.cost + square (remaining position q - i)
   ===
-      p.cost + rem position p ^ 2 - 2 * i * rem position p + i ^ 2 
-      >= q.cost + rem position q ^ 2 - 2 * i * rem position q + i ^ 2 
+      p.cost + rem position p ^ 2 - 2 * i * rem position p + i ^ 2
+      >= q.cost + rem position q ^ 2 - 2 * i * rem position q + i ^ 2
   ===
       2 * i * rem position q - 2 * i * rem position p
       >= q.cost + rem position q ^ 2 - p.cost - rem position p ^ 2

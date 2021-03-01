@@ -22,7 +22,7 @@ clean:
 
 .PHONY: width80
 width80:
-	find . -name '*.ml' | grep -v _build | xargs grep -E '^.{80,}' \
+	find . -name '*.ml' | grep -v _build | xargs grep --color -E -e '^.{80,}| $$' \
 		|| echo 'OK'
 
 .PHONY: magic
