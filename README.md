@@ -12,7 +12,7 @@ queues where you can push, pop and append elements at both ends of a list:
 
 Note that the constant time complexities are strict, non-amortized nor lazy.
 
-See [deque.mli](blob/master/src/deque.mli) for the full interface.
+See [deque.mli](src/deque.mli) for the full interface.
 
 This code would not have been possible without the fantastic support for GADTs
 in OCaml. The invariants are encoded inside each datatypes and the algorithms
