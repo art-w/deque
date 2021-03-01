@@ -87,30 +87,37 @@ module Bi (A : DEQUE) (B : DEQUE) = struct
     | _ -> assert false
 end
 
-module D2 = Bi (Naive) (Deque.Dequeue)
+module Test (X : DEQUE) = struct
 
-let elt () = Random.int 10000
+  module D2 = Bi (Naive) (X)
 
-let some_fst t = function
-  | None -> t
-  | Some (t, _) -> t
+  let elt () = Random.int 10000
 
-let some_snd t = function
-  | None -> t
-  | Some (_, t) -> t
+  let some_fst t = function
+    | None -> t
+    | Some (t, _) -> t
 
-let test t =
-  match Random.int 4 with
-  | 0 -> D2.cons (elt ()) t
-  | 1 -> D2.snoc t (elt ())
-  | 2 -> some_snd t (D2.uncons t)
-  | 3 -> some_fst t (D2.unsnoc t)
-  | _ -> assert false
+  let some_snd t = function
+    | None -> t
+    | Some (_, t) -> t
 
-let rec test_repeatedly n t =
-  if n <= 0
-  then ()
-  else test_repeatedly (n - 1) (test t)
+  let test t =
+    match Random.int 4 with
+    | 0 -> D2.cons (elt ()) t
+    | 1 -> D2.snoc t (elt ())
+    | 2 -> some_snd t (D2.uncons t)
+    | 3 -> some_fst t (D2.unsnoc t)
+    | _ -> assert false
 
-let () =
-  test_repeatedly 100000 D2.empty
+  let rec test_repeatedly n t =
+    if n <= 0
+    then ()
+    else test_repeatedly (n - 1) (test t)
+
+  let () =
+    test_repeatedly 100000 D2.empty
+
+end
+
+module A = Test (Deque.Dequeue)
+module B = Test (Deque.Deck)

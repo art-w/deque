@@ -6,8 +6,8 @@
   (libraries
     dequeue_internal
     steque_internal
-    deck_internal
-  ))
+    deck_internal)
+  (instrumentation (backend bisect_ppx)))
 
 (library
   (name dequeue_internal)

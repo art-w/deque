@@ -38,6 +38,7 @@ module Deck : sig
   val unsnoc : 'a t -> ('a t * 'a) option
   val append : 'a t -> 'a t -> 'a t
   val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
+  val fold_right : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
   val to_list : 'a t -> 'a list
 end
 

@@ -551,9 +551,14 @@ let rec un_to_list left right deq =
 
 let un_to_list d = un_to_list [] [] d
 
+let fold_left_to_list t =
+  List.rev (Deque.Deck.fold_left (fun xs x -> x::xs) [] (Obj.magic t))
+
 let test _ deq =
   let real_deq = D.regular_of_semi deq in
   let lst = to_list real_deq in
+  assert (lst = Deque.Deck.to_list (Obj.magic real_deq)) ;
+  assert (lst = fold_left_to_list real_deq) ;
   let x = elt () in
   assert (to_list (D.cons x real_deq) = x :: lst) ;
   assert (to_list (D.snoc real_deq x) = List.concat [lst; [x]] ) ;
