@@ -95,7 +95,3 @@ let fold_right
   in
 
   go_kont f t z
-
-let to_list t = fold_right (fun x xs -> x :: xs) t []
-
-let length t = fold_left (fun z _ -> z + 1) 0 t

@@ -102,11 +102,6 @@ let fold_right
 
   go_kont f t z
 
-
-let to_list
-: type a. a t -> a list
-= fun t -> fold_right (fun x xs -> x :: xs) t []
-
 let rec of_list
 : type a. a list -> (a, [`green]) kont
 = function
@@ -125,5 +120,3 @@ let rec of_list
       G (Green (p, HOLE, s), of_list (List.rev lst))
 
 let of_list lst = T (of_list lst)
-
-let length t = fold_left (fun z _ -> z + 1) 0 t

@@ -297,7 +297,7 @@ let join_t
 
 type _ green_or_red = Green_or_red : [< `green | `red] green_or_red
 
-let split
+let split_kont
 : type a b c k.
   c green_or_red -> (a, b, [`yellow], k) steque -> (b, c) kont -> a any_kont
 = fun green_or_red steque kont ->
@@ -336,7 +336,7 @@ type _ partition =
   | Small : 'a suffix -> 'a partition
   | Parts : ('a, 'c) prefix * ('a pair, _) kont * 'a suffix -> 'a partition
 
-let partition
+let partitioned
 : type a. a any_kont -> a partition
 = fun (Any_kont kont) ->
   match kont with
@@ -376,7 +376,7 @@ let concat_kont
                   | None -> cons_any x (cons_any y (cons_any z ty))
                   | Some (w, small) ->
                       let prefix = P4 (x, y, z, w, small) in
-                      match partition ty with
+                      match partitioned ty with
                       | Small c ->
                           Any_kont (G (Triple (prefix, KONT, c), empty_kont))
                       | Parts (p, child, suffix) ->
@@ -387,7 +387,7 @@ let concat_kont
       end
 
   | G (Triple (prefix, child, s), kont) ->
-      let Any_kont child = split Green_or_red child kont in
+      let Any_kont child = split_kont Green_or_red child kont in
       let Any_kont rest, suffix = join_any child s ty in
       Any_kont (green prefix rest suffix)
 
@@ -427,7 +427,7 @@ let concat
                   | None -> cons x (cons y (cons z ty))
                   | Some (w, small) ->
                       let prefix = P4 (x, y, z, w, small) in
-                      match partition (any_kont ty) with
+                      match partitioned (any_kont ty) with
                       | Small c ->
                           T (G (Triple (prefix, KONT, c), empty_kont))
                       | Parts (p, child, suffix) ->
@@ -438,7 +438,7 @@ let concat
       end
 
   | G (Triple (prefix, child, s), kont) ->
-      let Any_kont child = split Green_or_red child kont in
+      let Any_kont child = split_kont Green_or_red child kont in
       let Any_kont child, suffix = join_any child s (any_kont ty) in
       T (green prefix child suffix)
 

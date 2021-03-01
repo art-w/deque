@@ -2,7 +2,7 @@
   (public_name deque)
   (modules
     dequeue steque deck
-    deque)
+    list_like deque_sig deque)
   (libraries
     dequeue_internal
     steque_internal

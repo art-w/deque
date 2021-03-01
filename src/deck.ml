@@ -284,8 +284,3 @@ and fold_stored_triple
       let acc = buffer_fold_right f s acc in
       let acc = fold_st (fold_stored_triple f) c acc in
       buffer_fold_right f p acc
-
-
-let to_list t = fold_right (fun x xs -> x :: xs) t []
-
-let length t = fold_left (fun z _ -> z + 1) 0 t

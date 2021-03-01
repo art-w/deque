@@ -1,5 +1,18 @@
-include Deck
+module Dequeue = struct
+  include List_like.Make (Dequeue)
+  include Dequeue
+end
 
-module Dequeue = Dequeue
-module Steque = Steque
-module Deck = Deck
+module Steque = struct
+  include List_like.Make (Steque)
+  include Steque
+  let ( @ ) = append
+end
+
+module Deck = struct
+  include List_like.Make (Deck)
+  include Deck
+  let ( @ ) = append
+end
+
+include Deck
