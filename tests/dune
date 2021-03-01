@@ -1,0 +1,14 @@
+(executable
+  (name dequeue_test)
+  (modules dequeue_test)
+  (libraries deque))
+
+(executable
+  (name steque_test)
+  (modules steque_test)
+  (libraries deque))
+
+(executable
+  (name deck_test)
+  (modules deck_test)
+  (libraries deque deck_internal))

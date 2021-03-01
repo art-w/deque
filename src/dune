@@ -1,0 +1,30 @@
+(library
+  (public_name deque)
+  (modules
+    dequeue steque deck
+    deque)
+  (libraries
+    dequeue_internal
+    steque_internal
+    deck_internal
+  ))
+
+(library
+  (name dequeue_internal)
+  (package deque)
+  (modules dequeue_internal)
+  (instrumentation (backend bisect_ppx)))
+
+(library
+  (name steque_internal)
+  (package deque)
+  (modules steque_internal)
+  (libraries dequeue_internal)
+  (instrumentation (backend bisect_ppx)))
+
+(library
+  (name deck_internal)
+  (package deque)
+  (modules deck_internal)
+  (libraries dequeue_internal)
+  (instrumentation (backend bisect_ppx)))

@@ -1,0 +1,4 @@
+(executable
+  (name knuth_plass)
+  (modules knuth_plass)
+  (libraries deque str unix))
