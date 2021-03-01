@@ -6,6 +6,7 @@ module type DEQUE = sig
   val uncons : 'a t -> ('a * 'a t) option
   val unsnoc : 'a t -> ('a t * 'a) option
   val to_list : 'a t -> 'a list
+  val length : 'a t -> int
 end
 
 module Naive = struct
@@ -36,15 +37,29 @@ module Naive = struct
   let snoc t x = concat t [x]
 
   let to_list t = t
+
+  let length = List.length
 end
 
 module Bi (A : DEQUE) (B : DEQUE) = struct
   type 'a t = 'a A.t * 'a B.t
 
+  let rec uncons_to_list t = match B.uncons t with
+    | None -> []
+    | Some (x, t) -> x :: uncons_to_list t
+
+  let rec unsnoc_to_list acc t = match B.unsnoc t with
+    | None -> acc
+    | Some (t, x) -> unsnoc_to_list (x::acc) t
+  let unsnoc_to_list t = unsnoc_to_list [] t
+
   let make a b =
     let xs = A.to_list a in
     let ys = B.to_list b in
     assert (xs = ys) ;
+    assert (xs = uncons_to_list b) ;
+    assert (xs = unsnoc_to_list b) ;
+    assert (List.length xs = B.length b) ;
     (a, b)
 
   let empty = make A.empty B.empty

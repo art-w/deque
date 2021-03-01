@@ -51,9 +51,61 @@ let fold_left
 
   go_kont f z t
 
+let fold_right
+: type a z. (a -> z -> z) -> a t -> z -> z
+= fun f (T t) z ->
+
+  let list_of_buffer
+  : type b c. (b -> z -> z) -> (b, c) buffer -> z -> z
+  = fun f buf z ->
+    match buf with
+    | B0 -> z
+    | B1 a -> f a z
+    | B2 (a, b) -> f a (f b z)
+    | B3 (a, b, c) -> f a (f b (f c z))
+    | B4 (a, b, c, d) -> f a (f b (f c (f d z)))
+    | B5 (a, b, c, d, e) -> f a (f b (f c (f d (f e z))))
+  in
+
+  let rec go
+  : type b1 b2 c1 c2.
+    (b1 -> z -> z) -> (b1, b2, c1) deque -> z -> (b2, c2) kont -> z
+  = fun f deq z kont ->
+    match deq with
+    | HOLE -> go_kont f kont z
+    | Yellow (prefix, child, suffix) ->
+        let z = list_of_buffer f suffix z in
+        let z = go (go_pair f) child z kont in
+        list_of_buffer f prefix z
+    | Green (prefix, child, suffix) ->
+        let z = list_of_buffer f suffix z in
+        let z = go (go_pair f) child z kont in
+        list_of_buffer f prefix z
+    | Red (prefix, child, suffix) ->
+        let z = list_of_buffer f suffix z in
+        let z = go (go_pair f) child z kont in
+        list_of_buffer f prefix z
+
+  and go_pair
+  : type b. (b -> z -> z) -> (b * b) -> z -> z
+  = fun f (x, y) z -> f x (f y z)
+
+  and go_kont
+  : type b c. (b -> z -> z) -> (b, c) kont -> z -> z
+  = fun f kont z ->
+    match kont with
+    | Small buf -> list_of_buffer f buf z
+    | Y (child, kont) -> go f child z kont
+    | R (child, kont) -> go f child z kont
+    | G (child, kont) -> go f child z kont
+  in
+
+  go_kont f t z
+
+
 let to_list
 : type a. a t -> a list
-= fun t -> List.rev (fold_left (fun z x -> x :: z) [] t)
+= fun t -> fold_right (fun x xs -> x :: xs) t []
 
 let rec of_list
 : type a. a list -> (a, [`green]) kont
