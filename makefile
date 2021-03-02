@@ -12,6 +12,7 @@ doc:
 
 .PHONY: cover
 cover: clean
+	dune exec --force --instrument-with bisect_ppx tests/list_like_test.exe
 	dune exec --force --instrument-with bisect_ppx tests/dequeue_test.exe
 	dune exec --force --instrument-with bisect_ppx tests/steque_test.exe
 	dune exec --force --instrument-with bisect_ppx tests/deck_test.exe

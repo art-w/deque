@@ -102,6 +102,57 @@ let fold_right
 
   go_kont f t z
 
+
+let length
+= fun (T t) ->
+  let buffer_length
+  : type b c. int -> (b, c) buffer -> int
+  = fun s -> function
+    | B0 -> 0
+    | B1 _ -> s
+    | B2 _ -> 2 * s
+    | B3 _ -> 3 * s
+    | B4 _ -> 4 * s
+    | B5 _ -> 5 * s
+  in
+  let rec go
+  : type b1 b2 c1 c2.
+    int -> int -> (b1, b2, c1) deque -> (b2, c2) kont -> int
+  = fun acc s deq kont ->
+    match deq with
+    | HOLE -> go_kont acc s kont
+    | Yellow (prefix, child, suffix) ->
+        go_level acc s prefix suffix child kont
+    | Green (prefix, child, suffix) ->
+        go_level acc s prefix suffix child kont
+    | Red (prefix, child, suffix) ->
+        go_level acc s prefix suffix child kont
+  and go_level
+  : type b1 c1 c2 c3 d3 d4.
+       int
+    -> int
+    -> (b1, c1) buffer
+    -> (b1, c2) buffer
+    -> (b1 * b1, c3, d3) deque
+    -> (c3, d4) kont
+    -> int
+  = fun acc s prefix suffix child kont ->
+    let acc =
+      acc
+      + buffer_length s prefix
+      + buffer_length s suffix in
+    go acc (2 * s) child kont
+  and go_kont
+  : type b c. int -> int -> (b, c) kont -> int
+  = fun acc s -> function
+    | Small buf -> acc + buffer_length s buf
+    | Y (child, kont) -> go acc s child kont
+    | R (child, kont) -> go acc s child kont
+    | G (child, kont) -> go acc s child kont
+  in
+  go_kont 0 1 t
+
+
 let rec of_list
 : type a. a list -> (a, [`green]) kont
 = function
