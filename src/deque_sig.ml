@@ -56,6 +56,8 @@ module type S = sig
   val split : ('a * 'b) t -> 'a t * 'b t
   val combine : 'a t -> 'b t -> ('a * 'b) t
 
+  val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+
   val sort : ('a -> 'a -> int) -> 'a t -> 'a t
   val stable_sort : ('a -> 'a -> int) -> 'a t -> 'a t
   val fast_sort : ('a -> 'a -> int) -> 'a t -> 'a t

@@ -248,4 +248,25 @@ module Make (D : DEQUE) = struct
   let fold_left2 f z xs ys =
     fold_left2 ~exn:(Invalid_argument "Deque.fold_left2") f z xs ys
 
+
+  exception Return of int
+
+  let compare cmp xs ys =
+    try let ys =
+          D.fold_left
+            (fun ys x ->
+              match D.uncons ys with
+              | None -> raise (Return (-1))
+              | Some (y, ys) ->
+                  match cmp x y with
+                  | 0 -> ys
+                  | n -> raise (Return n))
+            ys
+            xs
+        in
+        if D.is_empty ys
+        then 0
+        else 1
+    with Return n -> n
+
 end
