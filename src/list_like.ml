@@ -28,7 +28,7 @@ module Make (D : DEQUE) = struct
     ()
 
   let map f t =
-    D.fold_right (fun x ys -> D.cons (f x) ys) t D.empty
+    D.fold_left (fun ys x -> D.snoc ys (f x)) D.empty t
 
   let mapi f t =
     let _, t =
@@ -42,13 +42,13 @@ module Make (D : DEQUE) = struct
     D.fold_left (fun ys x -> D.cons (f x) ys) D.empty t
 
   let filter_map f t =
-    D.fold_right
-      (fun x ys ->
+    D.fold_left
+      (fun ys x ->
         match f x with
         | None -> ys
-        | Some y -> D.cons y ys)
-      t
+        | Some y -> D.snoc ys y)
       D.empty
+      t
 
   let fold_left_map f z t =
     D.fold_left
@@ -61,8 +61,8 @@ module Make (D : DEQUE) = struct
   exception Abort
 
   let exists p t =
-    try iter (fun x -> if p x then raise Abort) t ; true
-    with Abort -> false
+    try iter (fun x -> if p x then raise Abort) t ; false
+    with Abort -> true
 
   let for_all p t = not (exists (fun x -> not (p x)) t)
 
@@ -89,11 +89,10 @@ module Make (D : DEQUE) = struct
     with M.Found x -> Some x
 
   let filter f t =
-    D.fold_right
-      (fun x ys ->
-        if f x then D.cons x ys else ys)
-      t
+    D.fold_left
+      (fun ys x -> if f x then D.snoc ys x else ys)
       D.empty
+      t
 
   let find_all = filter
 
