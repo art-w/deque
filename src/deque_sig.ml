@@ -15,6 +15,8 @@ module type S = sig
   val hd : 'a t -> 'a
   val tl : 'a t -> 'a t
 
+  val init : int -> (int -> 'a) -> 'a t
+
   val iter : ('a -> unit) -> 'a t -> unit
   val iteri : (int -> 'a -> unit) -> 'a t -> unit
   val map : ('a -> 'b) -> 'a t -> 'b t
@@ -45,6 +47,17 @@ module type S = sig
 
   val split : ('a * 'b) t -> 'a t * 'b t
 
+  val sort : ('a -> 'a -> int) -> 'a t -> 'a t
+  val stable_sort : ('a -> 'a -> int) -> 'a t -> 'a t
+  val fast_sort : ('a -> 'a -> int) -> 'a t -> 'a t
+  val sort_uniq : ('a -> 'a -> int) -> 'a t -> 'a t
+
+  val to_array : 'a t -> 'a array
+  val of_array : 'a array -> 'a t
+
   val to_list : 'a t -> 'a list
   val of_list : 'a list -> 'a t
+
+  val to_seq : 'a t -> 'a Seq.t
+  val of_seq : 'a Seq.t -> 'a t
 end

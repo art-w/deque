@@ -321,6 +321,30 @@ module Test (D : module type of Deque.Dequeue) = struct
     assert (lst1 = values) ;
     assert_eq lst1 deq1
 
+  let () = test "to_seq & of_seq" @@ fun () ->
+    let lst, deq = make () in
+    let lst_s = List.to_seq lst in
+    let deq_s = D.to_seq deq in
+    let lst' = List.of_seq lst_s in
+    let deq' = D.of_seq deq_s in
+    assert (lst = lst') ;
+    assert_eq lst deq'
+
+  let () = test "to_array & of_array" @@ fun () ->
+    let lst = make_list input_size in
+    let arr = Array.of_list lst in
+    let deq = D.of_array arr in
+    assert_eq lst deq ;
+    let arr' = D.to_array deq in
+    assert (arr = arr')
+
+  let () = test "init" @@ fun () ->
+    let f, g, check = make_fs () in
+    let lst = List.init input_size f in
+    let deq = D.init input_size g in
+    assert_eq lst deq ;
+    check ()
+
 end
 
 let header name =

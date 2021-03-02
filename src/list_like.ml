@@ -140,4 +140,48 @@ module Make (D : DEQUE) = struct
   let to_list t = D.fold_right (fun x xs -> x :: xs) t []
 
   let of_list xs = List.fold_left (fun t x -> D.snoc t x) D.empty xs
+
+  let to_seq t = Seq.unfold D.uncons t
+
+  let of_seq s = Seq.fold_left (fun xs x -> D.snoc xs x) D.empty s
+
+  let init n f =
+    let rec go acc i =
+      if i >= n
+      then acc
+      else let x = f i in
+           go (D.snoc acc x) (i + 1)
+    in
+    go D.empty 0
+
+  let to_array t =
+    match D.uncons t with
+    | None -> [| |]
+    | Some (x, t) ->
+      let n = length t in
+      let arr = Array.make (n + 1) x in
+      iteri (fun i x -> arr.(i + 1) <- x) t ;
+      arr
+
+  let of_array t =
+    init (Array.length t) (Array.get t)
+
+  let sort cmp t =
+    let t = to_array t in
+    Array.sort cmp t ;
+    of_array t
+
+  let stable_sort cmp t =
+    let t = to_array t in
+    Array.stable_sort cmp t ;
+    of_array t
+
+  let fast_sort cmp t =
+    let t = to_array t in
+    Array.fast_sort cmp t ;
+    of_array t
+
+  let sort_uniq cmp t =
+    of_list @@ List.sort_uniq cmp @@ to_list t
+
 end
