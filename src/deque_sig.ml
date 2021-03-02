@@ -25,8 +25,16 @@ module type S = sig
   val filter_map : ('a -> 'b option) -> 'a t -> 'b t
   val fold_left_map : ('a -> 'b -> 'a * 'c) -> 'a -> 'b t -> 'a * 'c t
 
+  val iter2 : ('a -> 'b -> unit) -> 'a t -> 'b t -> unit
+  val map2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+  val rev_map2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+
+  val fold_left2 : ('a -> 'b -> 'c -> 'a) -> 'a -> 'b t -> 'c t -> 'a
+
   val for_all : ('a -> bool) -> 'a t -> bool
   val exists : ('a -> bool) -> 'a t -> bool
+  val for_all2 : ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
+  val exists2 : ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
   val mem : 'a -> 'a t -> bool
   val memq : 'a -> 'a t -> bool
 
@@ -46,6 +54,7 @@ module type S = sig
   val mem_assq : 'a -> ('a * 'b) t -> bool
 
   val split : ('a * 'b) t -> 'a t * 'b t
+  val combine : 'a t -> 'b t -> ('a * 'b) t
 
   val sort : ('a -> 'a -> int) -> 'a t -> 'a t
   val stable_sort : ('a -> 'a -> int) -> 'a t -> 'a t

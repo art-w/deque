@@ -1,6 +1,7 @@
 module type DEQUE = sig
   type 'a t
   val empty : 'a t
+  val is_empty : 'a t -> bool
   val cons : 'a -> 'a t -> 'a t
   val uncons : 'a t -> ('a * 'a t) option
   val snoc : 'a t -> 'a -> 'a t
@@ -183,5 +184,68 @@ module Make (D : DEQUE) = struct
 
   let sort_uniq cmp t =
     of_list @@ List.sort_uniq cmp @@ to_list t
+
+
+  let fold_left2 ~exn f z xs ys =
+    let z, ys =
+      D.fold_left
+        (fun (z, ys) x ->
+          match D.uncons ys with
+          | None -> raise exn
+          | Some (y, ys) ->
+              f z x y, ys)
+        (z, ys)
+        xs
+    in
+    if D.is_empty ys
+    then z
+    else raise exn
+
+  let iter2 f xs ys =
+    fold_left2 ~exn:(Invalid_argument "Deque.iter2")
+      (fun () x y -> f x y)
+      ()
+      xs
+      ys
+
+  let map2 f xs ys =
+    fold_left2 ~exn:(Invalid_argument "Deque.map2")
+      (fun t x y -> D.snoc t (f x y))
+      D.empty
+      xs
+      ys
+
+  let rev_map2 f xs ys =
+    fold_left2 ~exn:(Invalid_argument "Deque.rev_map2")
+      (fun t x y -> D.cons (f x y) t)
+      D.empty
+      xs
+      ys
+
+  let exists2 p xs ys =
+    try fold_left2 ~exn:(Invalid_argument "Deque.exists2")
+          (fun b x y -> if p x y then raise Abort else b)
+          false
+          xs
+          ys
+    with Abort -> true
+
+  let for_all2 p xs ys =
+    try fold_left2 ~exn:(Invalid_argument "Deque.for_all2")
+          (fun b x y -> if p x y then b else raise Abort)
+          true
+          xs
+          ys
+    with Abort -> false
+
+  let combine xs ys =
+    fold_left2 ~exn:(Invalid_argument "Deque.combine")
+      (fun t x y -> D.snoc t (x, y))
+      D.empty
+      xs
+      ys
+
+  let fold_left2 f z xs ys =
+    fold_left2 ~exn:(Invalid_argument "Deque.fold_left2") f z xs ys
 
 end

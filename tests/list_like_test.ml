@@ -88,6 +88,36 @@ module Test (D : module type of Deque.Dequeue) = struct
     assert_eq lst deq ;
     check ()
 
+  type 'a acc = Z | X of 'a | F of 'a acc * 'a acc
+
+  let () = test "fold_left" @@ fun () ->
+    let lst, deq = make () in
+    let f, g, check = make_fs () in
+    let acc f z x = F (z, X (f x)) in
+    let x = List.fold_left (acc f) Z lst in
+    let y = D.fold_left (acc g) Z deq in
+    assert (x = y) ;
+    check ()
+
+  let () = test "fold_left2" @@ fun () ->
+    let lst0, deq0 = make () in
+    let lst1, deq1 = make () in
+    let f, g, check = make_fs () in
+    let acc f z x y = F (z, X (f (x, y))) in
+    let x = List.fold_left2 (acc f) Z lst0 lst1 in
+    let y = D.fold_left2 (acc g) Z deq0 deq1 in
+    assert (x = y) ;
+    check ()
+
+  let () = test "fold_right" @@ fun () ->
+    let lst, deq = make () in
+    let f, g, check = make_fs () in
+    let acc f x z = F (X (f x), z) in
+    let x = List.fold_right (acc f) lst Z in
+    let y = D.fold_right (acc g) deq Z in
+    assert (x = y) ;
+    check ()
+
   let () = test "fold_left_map" @@ fun () ->
     let lst, deq = make () in
     let f, g, check = make_fs () in
@@ -97,6 +127,33 @@ module Test (D : module type of Deque.Dequeue) = struct
     assert (lst_acc = deq_acc) ;
     assert_eq lst deq ;
     check ()
+
+  let () = test "iter2" @@ fun () ->
+    let lst0, deq0 = make () in
+    let lst1, deq1 = make () in
+    let f, g, check = make_fs () in
+    List.iter2 (fun x y -> ignore (f (x, y))) lst0 lst1 ;
+    D.iter2 (fun x y -> ignore (g (x, y))) deq0 deq1 ;
+    check ()
+
+  let () = test "map2" @@ fun () ->
+    let lst0, deq0 = make () in
+    let lst1, deq1 = make () in
+    let f, g, check = make_fs () in
+    let lst = List.map2 (fun x y -> f (x, y)) lst0 lst1 in
+    let deq = D.map2 (fun x y -> g (x, y)) deq0 deq1 in
+    assert_eq lst deq ;
+    check ()
+
+  let () = test "rev_map2" @@ fun () ->
+    let lst0, deq0 = make () in
+    let lst1, deq1 = make () in
+    let f, g, check = make_fs () in
+    let lst = List.rev_map2 (fun x y -> f (x, y)) lst0 lst1 in
+    let deq = D.rev_map2 (fun x y -> g (x, y)) deq0 deq1 in
+    assert_eq lst deq ;
+    check ()
+
 
   let () = test "exists" @@ fun () ->
     let lst, deq = make () in
@@ -124,6 +181,40 @@ module Test (D : module type of Deque.Dequeue) = struct
     let fail _ = failwith "should not be called" in
     assert (true = List.for_all fail []) ;
     assert (true = D.for_all fail D.empty) ;
+    check ()
+
+  let () = test "exists2" @@ fun () ->
+    let lst0, deq0 = make () in
+    let lst1, deq1 = make () in
+    let f, g, check = make_fs () in
+    let is_even f x y = (f (x * y)) mod 2 = 0 in
+    assert (true = List.exists2 (is_even f) lst0 lst1) ;
+    assert (true = D.exists2 (is_even g) deq0 deq1) ;
+    let nope f x y = ignore (f (x * y)) ; false in
+    assert (false = List.exists2 (nope f) lst0 lst1) ;
+    assert (false = D.exists2 (nope g) deq0 deq1) ;
+    let fail _ _ = failwith "should not be called" in
+    assert (false = List.exists2 fail [] []) ;
+    assert (false = D.exists2 fail D.empty D.empty) ;
+    assert (try List.exists2 fail [] lst1 with Invalid_argument _ -> true) ;
+    assert (try D.exists2 fail D.empty deq1 with Invalid_argument _ -> true) ;
+    check ()
+
+  let () = test "for_all2" @@ fun () ->
+    let lst0, deq0 = make () in
+    let lst1, deq1 = make () in
+    let f, g, check = make_fs () in
+    let is_even f x y = (f (x * y)) mod 2 = 0 in
+    assert (false = List.for_all2 (is_even f) lst0 lst1) ;
+    assert (false = D.for_all2 (is_even g) deq0 deq1) ;
+    let yeap f x y = ignore (f (x * y)) ; true in
+    assert (true = List.for_all2 (yeap f) lst0 lst1) ;
+    assert (true = D.for_all2 (yeap g) deq0 deq1) ;
+    let fail _ _ = failwith "should not be called" in
+    assert (true = List.for_all2 fail [] []) ;
+    assert (true = D.for_all2 fail D.empty D.empty) ;
+    assert (try List.for_all2 fail [] lst1 with Invalid_argument _ -> true) ;
+    assert (try D.for_all2 fail D.empty deq1 with Invalid_argument _ -> true) ;
     check ()
 
   let () = test "mem" @@ fun () ->
@@ -310,10 +401,11 @@ module Test (D : module type of Deque.Dequeue) = struct
         assert (None = D.assq_opt k deq') ;
         ()
 
-  let () = test "split" @@ fun () ->
-    let keys, values = make_list input_size, make_list input_size in
+  let () = test "combine & split" @@ fun () ->
+    let (keys, dkeys), (values, dvalues) = make (), make () in
     let lst = List.combine keys values in
-    let deq = D.of_list lst in
+    let deq = D.combine dkeys dvalues in
+    assert_eq lst deq ;
     let lst0, lst1 = List.split lst in
     let deq0, deq1 = D.split deq in
     assert (lst0 = keys) ;
@@ -344,6 +436,8 @@ module Test (D : module type of Deque.Dequeue) = struct
     let deq = D.init input_size g in
     assert_eq lst deq ;
     check ()
+
+
 
 end
 
