@@ -1,4 +1,9 @@
 
+.PHONY: test
+test:
+	dune exec --force tests/list_like_test.exe
+
+
 .PHONY: doc
 doc:
 	rm -rf _doc

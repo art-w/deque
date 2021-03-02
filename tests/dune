@@ -1,4 +1,9 @@
 (executable
+  (name list_like_test)
+  (modules list_like_test)
+  (libraries deque))
+
+(executable
   (name dequeue_test)
   (modules dequeue_test)
   (libraries deque))
