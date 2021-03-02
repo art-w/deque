@@ -2,3 +2,8 @@
   (name knuth_plass)
   (modules knuth_plass)
   (libraries deque str unix))
+
+(executable
+  (name ngrams)
+  (modules ngrams)
+  (libraries deque))
