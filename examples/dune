@@ -7,3 +7,8 @@
   (name ngrams)
   (modules ngrams)
   (libraries deque))
+
+(executable
+  (name string_builder)
+  (modules string_builder)
+  (libraries deque unix))
