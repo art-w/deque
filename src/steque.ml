@@ -95,3 +95,5 @@ let fold_right
   in
 
   go_kont f t z
+
+let rev t = fold_left (fun t x -> cons x t) empty t

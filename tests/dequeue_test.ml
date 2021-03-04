@@ -5,6 +5,7 @@ module type DEQUE = sig
   val snoc : 'a t -> 'a -> 'a t
   val uncons : 'a t -> ('a * 'a t) option
   val unsnoc : 'a t -> ('a t * 'a) option
+  val rev : 'a t -> 'a t
   val to_list : 'a t -> 'a list
   val length : 'a t -> int
 end
@@ -28,13 +29,11 @@ module Naive = struct
     in
     go [] t
 
-  let rec rev_concat a b = match a with
-    | [] -> b
-    | x::xs -> rev_concat xs (x::b)
-
-  let concat a b = rev_concat (List.rev a) b
+  let concat a b = List.rev_append (List.rev a) b
 
   let snoc t x = concat t [x]
+
+  let rev = List.rev
 
   let to_list t = t
 
@@ -85,6 +84,8 @@ module Bi (A : DEQUE) (B : DEQUE) = struct
         assert (x = x') ;
         Some (make a b, x)
     | _ -> assert false
+
+  let rev (a, b) = make (A.rev a) (B.rev b)
 end
 
 module Test (X : DEQUE) = struct
@@ -102,11 +103,12 @@ module Test (X : DEQUE) = struct
     | Some (_, t) -> t
 
   let test t =
-    match Random.int 4 with
+    match Random.int 5 with
     | 0 -> D2.cons (elt ()) t
     | 1 -> D2.snoc t (elt ())
     | 2 -> some_snd t (D2.uncons t)
     | 3 -> some_fst t (D2.unsnoc t)
+    | 4 -> D2.rev t
     | _ -> assert false
 
   let rec test_repeatedly n t =

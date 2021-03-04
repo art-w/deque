@@ -1,7 +1,7 @@
 include Dequeue_internal
 
 let fold_left
-: type a z. (z -> a -> z) -> z -> a t -> z
+: type a z. (z -> a -> z) -> z -> a s -> z
 = fun f z (T t) ->
 
   let list_of_buffer
@@ -52,7 +52,7 @@ let fold_left
   go_kont f z t
 
 let fold_right
-: type a z. (a -> z -> z) -> a t -> z -> z
+: type a z. (a -> z -> z) -> a s -> z -> z
 = fun f (T t) z ->
 
   let list_of_buffer
@@ -101,6 +101,15 @@ let fold_right
   in
 
   go_kont f t z
+
+
+let fold_left f z t = match t with
+  | Is xs -> fold_left f z xs
+  | Rev xs -> fold_right (fun x z -> f z x) xs z
+
+and fold_right f t z = match t with
+  | Is xs -> fold_right f xs z
+  | Rev xs -> fold_left (fun x z -> f z x) z xs
 
 
 let length
@@ -152,6 +161,10 @@ let length
   in
   go_kont 0 1 t
 
+let length = function
+  | Is  t -> length t
+  | Rev t -> length t
+
 
 let rec of_list
 : type a. a list -> (a, [`green]) kont
@@ -170,4 +183,4 @@ let rec of_list
       let lst, s = go [] (c, d, lst) in
       G (Green (p, HOLE, s), of_list (List.rev lst))
 
-let of_list lst = T (of_list lst)
+let of_list lst = Is (T (of_list lst))

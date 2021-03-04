@@ -42,11 +42,7 @@ type ('a, 'color) kont =
       * ('b, [`green]) kont
      -> ('a, [`red]) kont
 
-type 'a t = T : ('a, [< `green | `yellow]) kont -> 'a t
-
-let empty = T (Small B0)
-
-let is_empty t = t = empty
+type 'a s = T : ('a, [< `green | `yellow]) kont -> 'a s
 
 let green_prefix_cons
 : type a. a -> (a, [`green]) buffer -> (a, [`yellow]) buffer
@@ -405,3 +401,49 @@ let unsnoc (T t) = match t with
   | Y (Yellow (p1, child, s1), kont) ->
       let Any s1, x = yellow_unsnoc (Yellowish s1) in
       Some (red p1 child s1 kont, x)
+
+
+type 'a t = Is of 'a s | Rev of 'a s
+
+let empty = Is (T (Small B0))
+
+let is_empty = function
+  | Is  (T (Small B0)) -> true
+  | Rev (T (Small B0)) -> true
+  | _ -> false
+
+let rev = function
+  | Is t -> Rev t
+  | Rev t -> Is t
+
+let cons x xs = match xs with
+  | Is  xs -> Is  (cons x xs)
+  | Rev xs -> Rev (snoc xs x)
+
+and snoc xs x = match xs with
+  | Is  xs -> Is  (snoc xs x)
+  | Rev xs -> Rev (cons x xs)
+
+let uncons = function
+  | Is t ->
+      begin match uncons t with
+      | None -> None
+      | Some (x, t) -> Some (x, Is t)
+      end
+  | Rev t ->
+      begin match unsnoc t with
+      | None -> None
+      | Some (t, x) -> Some (x, Rev t)
+      end
+
+and unsnoc = function
+  | Is t ->
+      begin match unsnoc t with
+      | None -> None
+      | Some (t, x) -> Some (Is t, x)
+      end
+  | Rev t ->
+      begin match uncons t with
+      | None -> None
+      | Some (x, t) -> Some (Rev t, x)
+      end

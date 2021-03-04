@@ -284,3 +284,5 @@ and fold_stored_triple
       let acc = buffer_fold_right f s acc in
       let acc = fold_st (fold_stored_triple f) c acc in
       buffer_fold_right f p acc
+
+let rev t = fold_left (fun t x -> cons x t) empty t

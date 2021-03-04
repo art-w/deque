@@ -15,6 +15,8 @@ module type S = sig
   val hd : 'a t -> 'a
   val tl : 'a t -> 'a t
 
+  val rev : 'a t -> 'a t
+
   val init : int -> (int -> 'a) -> 'a t
 
   val iter : ('a -> unit) -> 'a t -> unit
