@@ -12,3 +12,8 @@
   (name string_builder)
   (modules string_builder)
   (libraries deque unix))
+
+(library
+  (name zipper)
+  (modules zipper)
+  (libraries deque))
