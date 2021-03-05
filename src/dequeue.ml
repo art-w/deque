@@ -184,3 +184,5 @@ let rec of_list
       G (Green (p, HOLE, s), of_list (List.rev lst))
 
 let of_list lst = Is (T (of_list lst))
+
+let append xs ys = fold_right cons xs ys

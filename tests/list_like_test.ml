@@ -70,6 +70,24 @@ module Test (D : module type of Deque.Dequeue) = struct
     assert_eq lst deq ;
     check ()
 
+  let () = test "rev" @@ fun () ->
+    let lst as lst_orig, deq = make () in
+    let lst = List.rev lst in
+    let deq = D.rev deq in
+    assert_eq lst deq ;
+    assert (lst <> lst_orig)
+
+  let () = test "append & rev_append" @@ fun () ->
+    let lst0, deq0 = make () in
+    let lst1, deq1 = make () in
+    let lst01 = List.append lst0 lst1 in
+    let deq01 = D.append deq0 deq1 in
+    assert_eq lst01 deq01 ;
+    let lst10 = List.rev_append lst0 lst1 in
+    let deq10 = D.rev_append deq0 deq1 in
+    assert_eq lst10 deq10 ;
+    assert (lst10 <> lst01)
+
   let () = test "rev_map" @@ fun () ->
     let lst, deq = make () in
     let f, g, check = make_fs () in
@@ -97,6 +115,9 @@ module Test (D : module type of Deque.Dequeue) = struct
     let x = List.fold_left (acc f) Z lst in
     let y = D.fold_left (acc g) Z deq in
     assert (x = y) ;
+    let x = List.fold_left (acc f) Z (List.rev lst) in
+    let y = D.fold_left (acc g) Z (D.rev deq) in
+    assert (x = y) ;
     check ()
 
   let () = test "fold_left2" @@ fun () ->
@@ -115,6 +136,9 @@ module Test (D : module type of Deque.Dequeue) = struct
     let acc f x z = F (X (f x), z) in
     let x = List.fold_right (acc f) lst Z in
     let y = D.fold_right (acc g) deq Z in
+    assert (x = y) ;
+    let x = List.fold_right (acc f) (List.rev lst) Z in
+    let y = D.fold_right (acc g) (D.rev deq) Z in
     assert (x = y) ;
     check ()
 
@@ -448,6 +472,15 @@ let header name =
 
 let () = header "Dequeue"
 module Test_dequeue = Test (Deque.Dequeue)
+let () = Printf.printf "\n%!"
+
+let () = header "Steque"
+module Test_steque = Test (struct
+  include Deque.Steque
+  let unsnoc t = match uncons (rev t) with
+    | None -> None
+    | Some (x, t) -> Some (rev t, x)
+end)
 let () = Printf.printf "\n%!"
 
 let () = header "Deck"

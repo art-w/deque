@@ -17,6 +17,12 @@ module type S = sig
 
   val rev : 'a t -> 'a t
 
+  val ( @ ) : 'a t -> 'a t -> 'a t
+  val append : 'a t -> 'a t -> 'a t
+  val rev_append : 'a t -> 'a t -> 'a t
+  val concat : 'a t t -> 'a t
+  val flatten : 'a t t -> 'a t
+
   val init : int -> (int -> 'a) -> 'a t
 
   val iter : ('a -> unit) -> 'a t -> unit
@@ -25,6 +31,7 @@ module type S = sig
   val mapi : (int -> 'a -> 'b) -> 'a t -> 'b t
   val rev_map : ('a -> 'b) -> 'a t -> 'b t
   val filter_map : ('a -> 'b option) -> 'a t -> 'b t
+  val concat_map : ('a -> 'b t) -> 'a t -> 'b t
   val fold_left_map : ('a -> 'b -> 'a * 'c) -> 'a -> 'b t -> 'a * 'c t
 
   val iter2 : ('a -> 'b -> unit) -> 'a t -> 'b t -> unit

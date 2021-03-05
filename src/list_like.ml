@@ -8,6 +8,15 @@ module type DEQUE = sig
 
   val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
   val fold_right : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+
+  val rev : 'a t -> 'a t
+  val append : 'a t -> 'a t -> 'a t
+end
+
+module type DEQUE_CAT = sig
+  include DEQUE
+  val append : 'a t -> 'a t -> 'a t
+  val rev : 'a t -> 'a t
 end
 
 module Make (D : DEQUE) = struct
@@ -268,5 +277,17 @@ module Make (D : DEQUE) = struct
         then 0
         else 1
     with Return n -> n
+
+
+  let ( @ ) = D.append
+
+  let rev_append xs ys = D.rev xs @ ys
+
+  let concat xss = D.fold_left (fun z x -> x @ z) D.empty xss
+
+  let flatten = concat
+
+  let concat_map f t =
+    D.fold_left (fun ys x -> ys @ f x) D.empty t
 
 end
