@@ -185,4 +185,9 @@ let rec of_list
 
 let of_list lst = Is (T (of_list lst))
 
-let append xs ys = fold_right cons xs ys
+let compare_lengths xs ys = compare (length xs) (length ys)
+
+let append xs ys =
+  if compare_lengths xs ys <= 0
+  then fold_right cons xs ys
+  else fold_left  snoc xs ys

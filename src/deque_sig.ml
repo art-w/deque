@@ -71,6 +71,7 @@ module type S = sig
   val stable_sort : ('a -> 'a -> int) -> 'a t -> 'a t
   val fast_sort : ('a -> 'a -> int) -> 'a t -> 'a t
   val sort_uniq : ('a -> 'a -> int) -> 'a t -> 'a t
+  val merge : ('a -> 'a -> int) -> 'a t -> 'a t -> 'a t
 
   val to_array : 'a t -> 'a array
   val of_array : 'a array -> 'a t

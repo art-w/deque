@@ -1,3 +1,4 @@
+let () = Random.self_init ()
 
 let make_f () =
   let calls = ref [] in
@@ -30,8 +31,8 @@ module Test (D : module type of Deque.Dequeue) = struct
 
   let input_size = 10
 
-  let make () =
-    let lst = make_list input_size in
+  let make ?(size = input_size) () =
+    let lst = make_list size in
     let deq = D.of_list lst in
     lst, deq
 
@@ -78,8 +79,8 @@ module Test (D : module type of Deque.Dequeue) = struct
     assert (lst <> lst_orig)
 
   let () = test "append & rev_append" @@ fun () ->
-    let lst0, deq0 = make () in
-    let lst1, deq1 = make () in
+    let lst0, deq0 = make ~size:input_size () in
+    let lst1, deq1 = make ~size:(2 * input_size) () in
     let lst01 = List.append lst0 lst1 in
     let deq01 = D.append deq0 deq1 in
     assert_eq lst01 deq01 ;
@@ -461,7 +462,53 @@ module Test (D : module type of Deque.Dequeue) = struct
     assert_eq lst deq ;
     check ()
 
+  let random_list () = List.init 1000 (fun _ -> Random.int 100)
+  let make_rnd () =
+    let lst = random_list () in
+    lst, D.of_list lst
 
+  let rec is_sorted = function
+    | [] | [_] -> true
+    | x0 :: x1 :: xs -> x0 <= x1 && is_sorted (x1::xs)
+
+  let () = test "sort & merge" @@ fun () ->
+    let lst0, deq0 = make_rnd () in
+    let lst0 = List.sort compare lst0 in
+    let deq0 = D.sort compare deq0 in
+    assert_eq lst0 deq0 ;
+    let lst1, deq1 = make_rnd () in
+    let lst1 = List.sort compare lst1 in
+    let deq1 = D.sort compare deq1 in
+    assert_eq lst1 deq1 ;
+    let f, g, check = make_fs () in
+    let count = ref 0 in
+    let comparing f x y =
+      incr count ;
+      ignore (f (x, y)) ;
+      compare x y in
+    let lst = List.merge (comparing f) lst0 lst1 in
+    let deq = D.merge (comparing g) deq0 deq1 in
+    assert_eq lst deq ;
+    assert (is_sorted lst) ;
+    assert (!count <= 2 * D.length deq) ;
+    check ()
+
+  let () = test "merge not sorted" @@ fun () ->
+    let lst0, deq0 = make_rnd () in
+    let lst1, deq1 = make_rnd () in
+    let f, g, check = make_fs () in
+    let count = ref 0 in
+    let comparing f x y =
+      incr count ;
+      ignore (f (x, y)) ;
+      compare x y
+    in
+    let lst = List.merge (comparing f) lst0 lst1 in
+    let deq = D.merge (comparing g) deq0 deq1 in
+    assert_eq lst deq ;
+    assert (not (is_sorted lst)) ;
+    assert (!count <= 2 * D.length deq) ;
+    check ()
 
 end
 

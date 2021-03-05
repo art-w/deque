@@ -176,6 +176,29 @@ module Make (D : DEQUE) = struct
   let of_array t =
     init (Array.length t) (Array.get t)
 
+
+  let rec merge cmp acc xs ys =
+    match D.uncons xs with
+    | None -> D.append acc ys
+    | Some (x, xs) -> merge_left cmp acc x xs ys
+
+  and merge_left cmp acc x xs ys =
+    match D.uncons ys with
+    | None -> D.append (D.snoc acc x) xs
+    | Some (y, ys) -> merge_head cmp acc x xs y ys
+
+  and merge_right cmp acc xs y ys =
+    match D.uncons xs with
+    | None -> D.append (D.snoc acc y) ys
+    | Some (x, xs) -> merge_head cmp acc x xs y ys
+
+  and merge_head cmp acc x xs y ys =
+    if cmp x y <= 0
+    then merge_right cmp (D.snoc acc x) xs y ys
+    else merge_left  cmp (D.snoc acc y) x xs ys
+
+  let merge cmp xs ys = merge cmp D.empty xs ys
+
   let sort cmp t =
     let t = to_array t in
     Array.sort cmp t ;
