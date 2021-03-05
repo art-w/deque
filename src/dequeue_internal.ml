@@ -403,47 +403,41 @@ let unsnoc (T t) = match t with
       Some (red p1 child s1 kont, x)
 
 
-type 'a t = Is of 'a s | Rev of 'a s
+type 'a t = { length : int ; s : 'a s }
 
-let empty = Is (T (Small B0))
+let empty = { length = 0 ; s = T (Small B0) }
 
-let is_empty = function
-  | Is  (T (Small B0)) -> true
-  | Rev (T (Small B0)) -> true
-  | _ -> false
+let is_empty t = t.length = 0
 
-let rev = function
-  | Is t -> Rev t
-  | Rev t -> Is t
+let length t = abs t.length
 
-let cons x xs = match xs with
-  | Is  xs -> Is  (cons x xs)
-  | Rev xs -> Rev (snoc xs x)
+let rev t = { t with length = - t.length }
 
-and snoc xs x = match xs with
-  | Is  xs -> Is  (snoc xs x)
-  | Rev xs -> Rev (cons x xs)
+let cons x { length = n ; s } =
+  if n >= 0
+  then { length = n + 1 ; s = cons x s }
+  else { length = n - 1 ; s = snoc s x }
 
-let uncons = function
-  | Is t ->
-      begin match uncons t with
-      | None -> None
-      | Some (x, t) -> Some (x, Is t)
-      end
-  | Rev t ->
-      begin match unsnoc t with
-      | None -> None
-      | Some (t, x) -> Some (x, Rev t)
-      end
+and snoc { length = n ; s } x =
+  if n >= 0
+  then { length = n + 1 ; s = snoc s x }
+  else { length = n - 1 ; s = cons x s }
 
-and unsnoc = function
-  | Is t ->
-      begin match unsnoc t with
-      | None -> None
-      | Some (t, x) -> Some (Is t, x)
-      end
-  | Rev t ->
-      begin match uncons t with
-      | None -> None
-      | Some (x, t) -> Some (Rev t, x)
-      end
+let uncons { length = n ; s } =
+  if n >= 0
+  then match uncons s with
+       | None -> None
+       | Some (x, s) -> Some (x, { length = n - 1 ; s })
+  else match unsnoc s with
+       | None -> None
+       | Some (s, x) -> Some (x, { length = n + 1 ; s })
+
+and unsnoc { length = n ; s } =
+  if n >= 0
+  then match unsnoc s with
+       | None -> None
+       | Some (s, x) -> Some ({ length = n - 1 ; s }, x)
+  else match uncons s with
+       | None -> None
+       | Some (x, s) -> Some ({ length = n + 1 ; s }, x)
+

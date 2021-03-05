@@ -103,67 +103,16 @@ let fold_right
   go_kont f t z
 
 
-let fold_left f z t = match t with
-  | Is xs -> fold_left f z xs
-  | Rev xs -> fold_right (fun x z -> f z x) xs z
+let fold_left f z { length ; s } =
+  if length >= 0
+  then fold_left f z s
+  else fold_right (fun x z -> f z x) s z
 
-and fold_right f t z = match t with
-  | Is xs -> fold_right f xs z
-  | Rev xs -> fold_left (fun x z -> f z x) z xs
+and fold_right f { length ; s } z =
+  if length >= 0
+  then fold_right f s z
+  else fold_left (fun x z -> f z x) z s
 
-
-let length
-= fun (T t) ->
-  let buffer_length
-  : type b c. int -> (b, c) buffer -> int
-  = fun s -> function
-    | B0 -> 0
-    | B1 _ -> s
-    | B2 _ -> 2 * s
-    | B3 _ -> 3 * s
-    | B4 _ -> 4 * s
-    | B5 _ -> 5 * s
-  in
-  let rec go
-  : type b1 b2 c1 c2.
-    int -> int -> (b1, b2, c1) deque -> (b2, c2) kont -> int
-  = fun acc s deq kont ->
-    match deq with
-    | HOLE -> go_kont acc s kont
-    | Yellow (prefix, child, suffix) ->
-        go_level acc s prefix suffix child kont
-    | Green (prefix, child, suffix) ->
-        go_level acc s prefix suffix child kont
-    | Red (prefix, child, suffix) ->
-        go_level acc s prefix suffix child kont
-  and go_level
-  : type b1 c1 c2 c3 d3 d4.
-       int
-    -> int
-    -> (b1, c1) buffer
-    -> (b1, c2) buffer
-    -> (b1 * b1, c3, d3) deque
-    -> (c3, d4) kont
-    -> int
-  = fun acc s prefix suffix child kont ->
-    let acc =
-      acc
-      + buffer_length s prefix
-      + buffer_length s suffix in
-    go acc (2 * s) child kont
-  and go_kont
-  : type b c. int -> int -> (b, c) kont -> int
-  = fun acc s -> function
-    | Small buf -> acc + buffer_length s buf
-    | Y (child, kont) -> go acc s child kont
-    | R (child, kont) -> go acc s child kont
-    | G (child, kont) -> go acc s child kont
-  in
-  go_kont 0 1 t
-
-let length = function
-  | Is  t -> length t
-  | Rev t -> length t
 
 let nth
 : type a. a s -> int -> int -> a
@@ -285,9 +234,9 @@ let nth t i =
   if i < 0 then invalid_arg "Dequeue.nth" ;
   let j = length t - i - 1 in
   if j < 0 then failwith "Dequeue.nth" ;
-  match t with
-  | Is  t -> nth t i j
-  | Rev t -> nth t j i
+  if t.length >= 0
+  then nth t.s i j
+  else nth t.s j i
 
 let nth_opt t i =
   try Some (nth t i) with Failure _ -> None
@@ -310,7 +259,8 @@ let rec of_list
       let lst, s = go [] (c, d, lst) in
       G (Green (p, HOLE, s), of_list (List.rev lst))
 
-let of_list lst = Is (T (of_list lst))
+let of_list lst =
+  { length = List.length lst ; s = T (of_list lst) }
 
 let compare_lengths xs ys = compare (length xs) (length ys)
 
