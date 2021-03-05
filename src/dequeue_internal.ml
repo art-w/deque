@@ -123,24 +123,33 @@ let yellow_unsnoc : type a. a yellow_buffer -> a any_buffer * a
   | B3 (a, b, c)    -> Any (B2 (a, b)),    c
   | B4 (a, b, c, d) -> Any (B3 (a, b, c)), d
 
+let buffer_uncons_unsafe : type a c. (a, c) buffer -> a * a any_buffer
+= function
+  | B0 -> assert false
+  | (B1 _) as buf -> yellow_uncons (Yellowish buf)
+  | (B2 _) as buf -> yellow_uncons (Yellowish buf)
+  | (B3 _) as buf -> yellow_uncons (Yellowish buf)
+  | (B4 _) as buf -> yellow_uncons (Yellowish buf)
+  | B5 (a, b, c, d, e) -> a, Any (B4 (b, c, d, e))
+
+let buffer_unsnoc_unsafe : type a c. (a, c) buffer -> a any_buffer * a
+= function
+  | B0 -> assert false
+  | (B1 _) as buf -> yellow_unsnoc (Yellowish buf)
+  | (B2 _) as buf -> yellow_unsnoc (Yellowish buf)
+  | (B3 _) as buf -> yellow_unsnoc (Yellowish buf)
+  | (B4 _) as buf -> yellow_unsnoc (Yellowish buf)
+  | B5 (a, b, c, d, e) -> Any (B4 (a, b, c, d)), e
+
 let buffer_uncons : type a c. (a, c) buffer -> (a * a any_buffer) option
 = function
-  | B0 -> None
-  | (B1 _) as buf -> Some (yellow_uncons (Yellowish buf))
-  | (B2 _) as buf -> Some (yellow_uncons (Yellowish buf))
-  | (B3 _) as buf -> Some (yellow_uncons (Yellowish buf))
-  | (B4 _) as buf -> Some (yellow_uncons (Yellowish buf))
-  | B5 (a, b, c, d, e) -> Some (a, Any (B4 (b, c, d, e)))
+  | B0  -> None
+  | buf -> Some (buffer_uncons_unsafe buf)
 
 let buffer_unsnoc : type a c. (a, c) buffer -> (a any_buffer * a) option
 = function
-  | B0 -> None
-  | (B1 _) as buf -> Some (yellow_unsnoc (Yellowish buf))
-  | (B2 _) as buf -> Some (yellow_unsnoc (Yellowish buf))
-  | (B3 _) as buf -> Some (yellow_unsnoc (Yellowish buf))
-  | (B4 _) as buf -> Some (yellow_unsnoc (Yellowish buf))
-  | B5 (a, b, c, d, e) -> Some (Any (B4 (a, b, c, d)), e)
-
+  | B0  -> None
+  | buf -> Some (buffer_unsnoc_unsafe buf)
 
 let prefix_rot : type a c. a -> (a, c) buffer -> (a, c) buffer * a
 = fun x buf -> match buf with
@@ -376,31 +385,27 @@ let snoc (T t) x = match t with
       let Any s1 = yellow_suffix_snoc (Yellowish s1) x in
       red p1 child s1 kont
 
-let uncons (T t) = match t with
+let uncons_unsafe (T t) = match t with
   | Small buf ->
-      begin match buffer_uncons buf with
-      | None -> None
-      | Some (x, Any buf) -> Some (x, T (Small buf))
-      end
+      let x, Any buf = buffer_uncons_unsafe buf in
+      x, T (Small buf)
   | G (Green (p1, child, s1), kont) ->
       let x, Yellowish p1 = green_uncons p1 in
-      Some (x, yellow p1 child s1 kont)
+      x, yellow p1 child s1 kont
   | Y (Yellow (p1, child, s1), kont) ->
       let x, Any p1 = yellow_uncons (Yellowish p1) in
-      Some (x, red p1 child s1 kont)
+      x, red p1 child s1 kont
 
-let unsnoc (T t) = match t with
+let unsnoc_unsafe (T t) = match t with
   | Small buf ->
-      begin match buffer_unsnoc buf with
-      | None -> None
-      | Some (Any buf, x) -> Some (T (Small buf), x)
-      end
+      let Any buf, x = buffer_unsnoc_unsafe buf in
+      T (Small buf), x
   | G (Green (p1, child, s1), kont) ->
       let Yellowish s1, x = green_unsnoc s1 in
-      Some (yellow p1 child s1 kont, x)
+      yellow p1 child s1 kont, x
   | Y (Yellow (p1, child, s1), kont) ->
       let Any s1, x = yellow_unsnoc (Yellowish s1) in
-      Some (red p1 child s1 kont, x)
+      red p1 child s1 kont, x
 
 
 type 'a t = { length : int ; s : 'a s }
@@ -424,20 +429,22 @@ and snoc { length = n ; s } x =
   else { length = n - 1 ; s = cons x s }
 
 let uncons { length = n ; s } =
-  if n >= 0
-  then match uncons s with
-       | None -> None
-       | Some (x, s) -> Some (x, { length = n - 1 ; s })
-  else match unsnoc s with
-       | None -> None
-       | Some (s, x) -> Some (x, { length = n + 1 ; s })
+  match n with
+  | 0 -> None
+  | _ when n >= 0 ->
+    let x, s = uncons_unsafe s in
+    Some (x, { length = n - 1 ; s })
+  | _ ->
+    let s, x = unsnoc_unsafe s in
+    Some (x, { length = n + 1 ; s })
 
-and unsnoc { length = n ; s } =
-  if n >= 0
-  then match unsnoc s with
-       | None -> None
-       | Some (s, x) -> Some ({ length = n - 1 ; s }, x)
-  else match uncons s with
-       | None -> None
-       | Some (x, s) -> Some ({ length = n + 1 ; s }, x)
+let unsnoc { length = n ; s } =
+  match n with
+  | 0 -> None
+  | _ when n >= 0 ->
+      let s, x = unsnoc_unsafe s in
+      Some ({ length = n - 1 ; s }, x)
+  | _ ->
+      let x, s = uncons_unsafe s in
+      Some ({ length = n + 1 ; s }, x)
 
