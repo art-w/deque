@@ -25,7 +25,8 @@ let test name fn =
       Printf.printf "OK %s\n%!" name
   with err ->
     Printf.fprintf stderr "ERROR %s\n%s\n%!" name (Printexc.to_string err) ;
-    Printexc.print_backtrace stderr
+    Printexc.print_backtrace stderr ;
+    raise err
 
 module Test (D : module type of Deque.Dequeue) = struct
 
@@ -39,6 +40,10 @@ module Test (D : module type of Deque.Dequeue) = struct
   let assert_eq lst deq = assert (lst = D.to_list deq)
   let assert_not_found f =
     assert (try let _ = f () in false with Not_found -> true)
+  let assert_invalid f =
+    assert (try let _ = f () in false with Invalid_argument _ -> true)
+  let assert_failure f =
+    assert (try let _ = f () in false with Failure _ -> true)
 
   let () = test "iter" @@ fun () ->
     let lst, deq = make () in
@@ -106,6 +111,21 @@ module Test (D : module type of Deque.Dequeue) = struct
     assert (List.length lst < List.length lst_orig) ;
     assert_eq lst deq ;
     check ()
+
+  let () = test "nth & nth_opt" @@ fun () ->
+    let lst, deq = make ~size:1234 () in
+    for i = 0 to List.length lst - 1 do
+      let x = List.nth lst i in
+      let y = D.nth deq i in
+      assert (x = y) ;
+      match D.nth_opt deq i with
+      | None -> assert false
+      | Some y -> assert (x = y)
+    done ;
+    assert_invalid (fun () -> D.nth deq (-1)) ;
+    assert_invalid (fun () -> D.nth_opt deq (-1)) ;
+    assert_failure (fun () -> D.nth deq (D.length deq)) ;
+    assert (None = D.nth_opt deq (D.length deq))
 
   type 'a acc = Z | X of 'a | F of 'a acc * 'a acc
 

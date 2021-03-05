@@ -4,11 +4,11 @@ by H. Kaplan and R. E. Tarjan, journal of the ACM 31:11-16 (1999) 1709-1723 http
 Following the paper, this package provides 3 implementations of double-ended
 queues which let you push, pop and append elements at both ends of the list:
 
-| Module  | cons | uncons | snoc | unsnoc          | append          |
-|---------|:----:|:------:|:----:|:---------------:|:---------------:|
-| Dequeue | O(1) | O(1)   | O(1) | O(1)            | :no_entry_sign: |
-| Steque  | O(1) | O(1)   | O(1) | :no_entry_sign: | O(1)            |
-| Deck    | O(1) | O(1)   | O(1) | O(1)            | O(1)            |
+| Module  | cons | uncons | snoc | unsnoc          | append          | rev             | nth                |
+|---------|:----:|:------:|:----:|:---------------:|:---------------:|:---------------:|:------------------:|
+| Dequeue | O(1) | O(1)   | O(1) | O(1)            | :no_entry_sign: | O(1)            | O(log min(i, N-i)) |
+| Steque  | O(1) | O(1)   | O(1) | :no_entry_sign: | O(1)            | :no_entry_sign: | :no_entry_sign:    |
+| Deck    | O(1) | O(1)   | O(1) | O(1)            | O(1)            |                 | :no_entry_sign:    |
 
 Note that the constant time complexities are strict and "real time", not
 amortized nor lazy.

@@ -14,6 +14,8 @@ module type S = sig
   val length : 'a t -> int
   val hd : 'a t -> 'a
   val tl : 'a t -> 'a t
+  val nth : 'a t -> int -> 'a
+  val nth_opt : 'a t -> int -> 'a option
 
   val rev : 'a t -> 'a t
 

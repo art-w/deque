@@ -14,6 +14,9 @@ val append : 'a t -> 'a t -> 'a t
 
 val rev : 'a t -> 'a t
 
+val nth : 'a t -> int -> 'a
+val nth_opt : 'a t -> int -> 'a option
+
 val fold_left  : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 val fold_right : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
 

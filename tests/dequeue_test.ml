@@ -8,6 +8,7 @@ module type DEQUE = sig
   val rev : 'a t -> 'a t
   val to_list : 'a t -> 'a list
   val length : 'a t -> int
+  val nth : 'a t -> int -> 'a
 end
 
 module Naive = struct
@@ -30,14 +31,11 @@ module Naive = struct
     go [] t
 
   let concat a b = List.rev_append (List.rev a) b
-
   let snoc t x = concat t [x]
-
   let rev = List.rev
-
   let to_list t = t
-
   let length = List.length
+  let nth = List.nth
 end
 
 module Bi (A : DEQUE) (B : DEQUE) = struct
@@ -86,6 +84,19 @@ module Bi (A : DEQUE) (B : DEQUE) = struct
     | _ -> assert false
 
   let rev (a, b) = make (A.rev a) (B.rev b)
+
+  let check_nth (a, b) =
+    let n = B.length b in
+    assert (n = A.length a) ;
+    if n = 0
+    then ()
+    else begin
+      let i = Random.int n in
+      let x = A.nth a i in
+      let y = B.nth b i in
+      assert (x = y)
+    end
+
 end
 
 module Test (X : DEQUE) = struct
@@ -103,12 +114,13 @@ module Test (X : DEQUE) = struct
     | Some (_, t) -> t
 
   let test t =
-    match Random.int 5 with
+    match Random.int 6 with
     | 0 -> D2.cons (elt ()) t
     | 1 -> D2.snoc t (elt ())
     | 2 -> some_snd t (D2.uncons t)
     | 3 -> some_fst t (D2.unsnoc t)
     | 4 -> D2.rev t
+    | 5 -> D2.check_nth t ; t
     | _ -> assert false
 
   let rec test_repeatedly n t =

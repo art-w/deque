@@ -24,11 +24,11 @@ module Make (D : DEQUE) = struct
   let length t = D.fold_left (fun s _ -> s + 1) 0 t
 
   let hd t = match D.uncons t with
-    | None -> failwith "hd"
+    | None -> failwith "Deque.hd"
     | Some (x, _) -> x
 
   let tl t = match D.uncons t with
-    | None -> failwith "tl"
+    | None -> failwith "Deque.tl"
     | Some (_, t) -> t
 
   let iter f t = D.fold_left (fun () x -> f x) () t
@@ -36,6 +36,16 @@ module Make (D : DEQUE) = struct
   let iteri f t =
     let _ = D.fold_left (fun i x -> f i x ; i + 1) 0 t in
     ()
+
+  let nth (type a) t idx =
+    if idx < 0 then invalid_arg "Deque.nth" ;
+    let module M = struct exception Found of a end in
+    try iteri (fun i x -> if i = idx then raise (M.Found x)) t ;
+        failwith "Deque.nth"
+    with M.Found x -> x
+
+  let nth_opt t idx =
+    try Some (nth t idx) with Failure _ -> None
 
   let map f t =
     D.fold_left (fun ys x -> D.snoc ys (f x)) D.empty t

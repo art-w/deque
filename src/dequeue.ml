@@ -165,6 +165,133 @@ let length = function
   | Is  t -> length t
   | Rev t -> length t
 
+let nth
+: type a. a s -> int -> int -> a
+= fun (T t) i j ->
+
+  let buffer_length
+  : type b c. int -> (b, c) buffer -> int
+  = fun s -> function
+    | B0 -> 0
+    | B1 _ -> s
+    | B2 _ -> 2 * s
+    | B3 _ -> 3 * s
+    | B4 _ -> 4 * s
+    | B5 _ -> 5 * s
+  in
+
+  let buffer
+  : type b c. int -> int -> (int -> int -> b -> a) -> (b, c) buffer -> a
+  = fun i s search -> function
+    | B0 -> assert false
+    | B1 a -> search i s a
+    | B2 (a, b) ->
+        if i < s
+        then search i s a
+        else search (i - s) s b
+    | B3 (a, b, c) ->
+        begin match i / s with
+        | 0 -> search i s a
+        | 1 -> search (i - s) s b
+        | 2 -> search (i - 2 * s) s c
+        | _ -> assert false
+        end
+    | B4 (a, b, c, d) ->
+        begin match i / s with
+        | 0 -> search i s a
+        | 1 -> search (i - s) s b
+        | 2 -> search (i - 2 * s) s c
+        | 3 -> search (i - 3 * s) s d
+        | _ -> assert false
+        end
+    | B5 (a, b, c, d, e) ->
+        begin match i / s with
+        | 0 -> search i s a
+        | 1 -> search (i - s) s b
+        | 2 -> search (i - 2 * s) s c
+        | 3 -> search (i - 3 * s) s d
+        | 4 -> search (i - 4 * s) s e
+        | _ -> assert false
+        end
+  in
+
+  let rec go
+  : type b1 b2 c1 c2.
+       int
+    -> int
+    -> int
+    -> (int -> int -> b1 -> a)
+    -> (b1, b2, c1) deque
+    -> (b2, c2) kont
+    -> a
+  = fun i j s search deq kont ->
+    match deq with
+    | HOLE -> go_kont i j s search kont
+    | Yellow (prefix, child, suffix) ->
+        go_level i j s search prefix suffix child kont
+    | Green (prefix, child, suffix) ->
+        go_level i j s search prefix suffix child kont
+    | Red (prefix, child, suffix) ->
+        go_level i j s search prefix suffix child kont
+
+  and go_level
+  : type b1 c1 c2 c3 d3 d4.
+       int
+    -> int
+    -> int
+    -> (int -> int -> b1 -> a)
+    -> (b1, c1) buffer
+    -> (b1, c2) buffer
+    -> (b1 * b1, c3, d3) deque
+    -> (c3, d4) kont
+    -> a
+  = fun i j s search prefix suffix child kont ->
+    let prefix_len = buffer_length s prefix in
+    let suffix_len = buffer_length s suffix in
+    if i < prefix_len
+    then buffer i s search prefix
+    else if j < suffix_len
+    then buffer (suffix_len - j - 1) s search suffix
+    else let i, j, s = i - prefix_len, j - suffix_len, 2 * s in
+         go i j s (go_pair search) child kont
+
+  and go_pair
+  : type b. (int -> int -> b -> a) -> int -> int -> (b * b) -> a
+  = fun f i s (x, y) ->
+    let s2 = s / 2 in
+    if i < s2
+    then f i s2 x
+    else f (i - s2) s2 y
+
+  and go_kont
+  : type b c. int -> int -> int -> (int -> int -> b -> a) -> (b, c) kont -> a
+  = fun i j s search -> function
+    | Small buf -> buffer i s search buf
+    | Y (child, kont) -> go i j s search child kont
+    | R (child, kont) -> go i j s search child kont
+    | G (child, kont) -> go i j s search child kont
+  in
+
+  let search1 : int -> int -> a -> a
+  = fun i s x ->
+    assert (i = 0) ;
+    assert (s = 1) ;
+    x
+  in
+
+  go_kont i j 1 search1 t
+
+let nth t i =
+  if i < 0 then invalid_arg "Dequeue.nth" ;
+  let j = length t - i - 1 in
+  if j < 0 then failwith "Dequeue.nth" ;
+  match t with
+  | Is  t -> nth t i j
+  | Rev t -> nth t j i
+
+let nth_opt t i =
+  try Some (nth t i) with Failure _ -> None
+
 
 let rec of_list
 : type a. a list -> (a, [`green]) kont
