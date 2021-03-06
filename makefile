@@ -5,10 +5,11 @@ test:
 
 
 .PHONY: doc
-doc:
+doc: odoc.css
 	rm -rf _doc
 	dune build @doc
 	cp -r _build/default/_doc _doc
+	[ -f odoc.css ] && cp -f odoc.css _doc/_html/odoc.css
 
 .PHONY: cover
 cover: clean

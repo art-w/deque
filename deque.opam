@@ -2,6 +2,14 @@
 opam-version: "2.0"
 version: "0.1"
 synopsis: "Purely Functional, Real-Time Deques with Catenation"
+description: """
+A double-ended queue is an ordered collection for which elements can be added and removed from the front and the back. This library provides a purely functional implementation, such that the following operations are all worst-case constant time:
+- `cons` adds an element to the front of the deque
+- `uncons` pops the left-most element
+- `snoc` adds an element at the back
+- `unsnoc` pops the right-most element
+- `append` concatenates two deques
+This datastructure was invented by Kaplan and Tarjan and is described in their paper by the same name."""
 maintainer: ["art.wendling@gmail.com"]
 authors: ["Arthur Wendling"]
 license: "MIT"
