@@ -45,9 +45,17 @@ module type S = sig
 
   (** {1 Comparisons} *)
 
+  val ( = ) : 'a t -> 'a t -> bool
+  (** [xs = ys] is satisfied when the elements of [xs] are in the same order,
+      and are structurally equal to the elements of [ys]. *)
+
+  val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+  (** [equal eq xs ys] is [true] if the two deques have the same length
+      and satisfy [eq x_i y_i] for each pair of elements of [combine xs ys]. *)
+
   val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
   (** [compare cmp xs ys] compares the deque [xs] in lexical order with [ys]
-      according to the comparison function [cmp].  *)
+      according to the comparison function [cmp]. *)
 
   (** {1 Catenation} *)
 
@@ -231,8 +239,7 @@ module type S = sig
 
   val combine : 'a t -> 'b t -> ('a * 'b) t
   (** [combine xs ys] returns a single deque [xys] formed by the aligned pairs
-      [(x_i, y_i)] of [xs] and [ys].
-      The order is preserved.
+      [(x_i, y_i)] of [xs] and [ys]. The order is preserved.
       @raise Invalid_argument if the two deques have different lengths.
   *)
 
