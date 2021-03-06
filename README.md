@@ -24,11 +24,11 @@ Example applications of these deques include:
   Moor and Jeremy Gibbons in [Bridging the algorithm gap: A linear-time
   functional program for paragraph formatting].
 - [string_builder.ml](examples/string_builder.ml) shows how to improve the
-  asymptotic of a monoidal "concat" operator, a common design pattern in purely
-  functional libraries. Surprisingly, this benchmark reveals that the simpler
-  [difference lists] may exhibit weird edge cases in addition to being less
-  flexible. See [Reflection without remorse] by Atze van der Ploeg and Oleg
-  Kiselyov for a less obvious application to monadic computations.
+  asymptotics of a monoidal "concat" operator, a common design pattern in
+  purely functional libraries. Surprisingly, this benchmark reveals that the
+  simpler [difference lists] may exhibit weird edge cases in addition to being
+  less flexible. See [Reflection without remorse] by Atze van der Ploeg and
+  Oleg Kiselyov for a less obvious application to monadic computations.
 - [zipper.ml](examples/zipper.ml) is a classic zipper to iterate over an
   ordered collection, with the added benefit that one can instantly close the
   traversal in `O(1)` rather than `O(length traversed)`. Such a zipper is a
