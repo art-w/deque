@@ -1,5 +1,5 @@
-> [Purely Functional, Real-Time Deques with Catenation] \[284ko postscript\] 
-> by Haim Kaplan and Robert E. Tarjan 
+> [Purely Functional, Real-Time Deques with Catenation] \[284ko postscript\] \
+> by Haim Kaplan and Robert E. Tarjan \
 > journal of the ACM 31:11-16 (1999) 1709-1723 https://doi.org/10.1145/324133.324139
 
 Following the paper, this library provides 3 implementations of double-ended
