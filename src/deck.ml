@@ -41,6 +41,12 @@ and fold_nedeque
   | Pair_right (left, right) ->
       let acc = fold_path f acc left in
       fold_triple_h f acc right kont
+  | Pair_right_sym (left, right) ->
+      let acc = fold_triple_h f acc left kont in
+      fold_path f acc right
+  | Pair_left_sym (left, right) ->
+      let acc = fold_path f acc left in
+      fold_triple_h f acc right kont
 
 and fold_path
 : type acc a c k. (acc -> a -> acc) -> acc -> (a, c, k) path -> acc
@@ -181,6 +187,12 @@ and fold_nedeque
       let acc = fold_path f right acc in
       fold_triple_h f left kont acc
   | Pair_right (left, right) ->
+      let acc = fold_triple_h f right kont acc in
+      fold_path f left acc
+  | Pair_right_sym (left, right) ->
+      let acc = fold_path f right acc in
+      fold_triple_h f left kont acc
+  | Pair_left_sym (left, right) ->
       let acc = fold_triple_h f right kont acc in
       fold_path f left acc
 

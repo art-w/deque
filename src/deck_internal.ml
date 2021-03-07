@@ -406,7 +406,7 @@ and ('a, 'b, 'preference, 'hole_loc) not_empty =
        ('a, 'b, [< `yellow | `orange], only, 'hole_loc, _, has_hole) triple
     -> ('a, 'b, _, 'hole_loc) not_empty
 
-  | Pair_left  :
+  | Pair_left :
        ('a, 'b, [< `yellow | `orange], left, 'hole_loc, _, has_hole) triple
      * ('a, _, right) path
     -> ('a, 'b, preferred_left, 'hole_loc) not_empty
@@ -414,6 +414,16 @@ and ('a, 'b, 'preference, 'hole_loc) not_empty =
   | Pair_right :
        ('a, [`green], left) path
      * ('a, 'b, [< `yellow | `orange], right, 'hole_loc, _, has_hole) triple
+    -> ('a, 'b, preferred_right, 'hole_loc) not_empty
+
+  | Pair_left_sym :
+       ('a, _, left) path
+     * ('a, 'b, [< `yellow | `orange], right, 'hole_loc, _, has_hole) triple
+    -> ('a, 'b, preferred_left, 'hole_loc) not_empty
+
+  | Pair_right_sym :
+       ('a, 'b, [< `yellow | `orange], left, 'hole_loc, _, has_hole) triple
+     * ('a, [`green], right) path
     -> ('a, 'b, preferred_right, 'hole_loc) not_empty
 
 and ('a, 'color, 'kind) path =
@@ -653,6 +663,8 @@ let pref_right
   | Only_of le -> Pref_right (Only_of le, ft)
   | Pair_left (le, Path (ri, ght)) ->
       Pref_right (Pair_right (Path (le, ft), ri), ght)
+  | Pair_left_sym (Path (ri, ght), le) ->
+      Pref_right (Pair_right_sym (ri, Path (le, ft)), ght) (* why is [ght] not rev here?.. or even [ft] ? *)
 
 let no_pref
 : type a b.
@@ -665,6 +677,8 @@ let no_pref
       Only_path (Path (ri, ght))
   | Pair_right (left, ri) ->
       Pair_red (left, Path (ri, ght))
+  | Pair_right_sym (ri, left) ->
+      Pair_red (Path (ri, ght), left)
 
 
 let make_child
@@ -684,6 +698,15 @@ let make_child
       S (T (Pair_red (left, Path (ri, ght))))
   | Is_red, Pair_right (left, ri), ght ->
       S (T (Pair_green (left, Path (ri, ght))))
+
+  | Is_green, Pair_left_sym (left, ri), ght ->
+      S (T (Pair_green (left, Path (ri, ght))))
+  | Is_red, Pair_left_sym (left, ri), ght ->
+      S (T (Pair_green (left, Path (ri, ght))))
+  | Is_green, Pair_right_sym (le, right), ft ->
+      S (T (Pair_green (Path (le, ft), right)))
+  | Is_red, Pair_right_sym (le, right), ft ->
+      S (T (Pair_green (Path (le, ft), right)))
 
 let cons_child
 : type a b c p hl.
@@ -707,6 +730,15 @@ let cons_child
   | Pair_right (left, right), g ->
       Pair_right (cons_left_path x left, right), g
 
+  | Pair_left_sym (left, right), g ->
+      Pair_left_sym (cons_left_path x left, right), g
+
+  | Pair_right_sym (left, right), g ->
+      begin match is_hole left, left with
+      | Is_hole,  HOLE -> Pair_right_sym (HOLE, right), cons_left_triple x g
+      | Not_hole, left -> Pair_right_sym (cons_left_triple x left, right), g
+      end
+
 let snoc_child
 : type a b c p hl.
      (a, b, p, hl) not_empty
@@ -728,6 +760,15 @@ let snoc_child
       end
   | Pair_left (left, right), g ->
       Pair_left (left, snoc_right_path right x), g
+
+  | Pair_left_sym (left, right), g ->
+      begin match is_hole right, right with
+      | Is_hole,  HOLE  -> Pair_left_sym (left, right), snoc_right_triple g x
+      | Not_hole, right -> Pair_left_sym (left, snoc_right_triple right x), g
+      end
+  | Pair_right_sym (left, right), g ->
+      Pair_right_sym (left, snoc_right_path right x), g
+
 
 type 'a buffer_12 = 'a * ('a, eq1) vector
 
