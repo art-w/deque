@@ -448,3 +448,4 @@ let unsnoc { length = n ; s } =
       let x, s = uncons_unsafe s in
       Some ({ length = n + 1 ; s }, x)
 
+let is_rev t = t.length < 0

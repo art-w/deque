@@ -69,7 +69,7 @@ let rec list_gen size m =
   else let rest = list_gen (size - 1) m in
        m >>= fun x ->
        rest >>= fun xs ->
-       return (x::xs)
+       return (Buffer.L2R x :: xs)
 
 let buffer_make e size : ('a, 's) Buffer.t m =
   Obj.magic @@ map Deque.Dequeue.of_list @@ list_gen size e
@@ -91,8 +91,9 @@ let buffer_eq2 e : ('a, z ge2) Buffer.t m = buffer_make e 2
 let buffer_ge1 e : ('a, z ge1) Buffer.t m = buffer_make e (1 + Random.int 6)
 
 type ('a, 'preference, 'color) holy =
-  | Holy : ('a, 'b, 'preference, 'hole_loc) not_empty
-         * ('b, 'b, [< `green | `red] as 'color, 'hole_loc, nh, nh, nh) triple
+  | Holy : ('a, 'b, 'preference, (_*_) as 'hole_loc) not_empty
+         * ('b, 'b, [< `green | `red] as 'color,
+            'hole_loc, nh, nh, nh, _*_) triple
         -> ('a, 'preference, 'color) holy
 
 type ('a, 'preference) unholy =
@@ -134,7 +135,7 @@ let rec stored_triple
   )
 
 and only_green
-: type a. a m -> (a, a, [`green], only, nh, nh, nh) triple m
+: type a. a m -> (a, a, [`green], only, nh, nh, nh, not_rev) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -147,7 +148,7 @@ and only_green
   ))
 
 and only_red
-: type a. a m -> (a, a, [`red], only, nh, nh, nh) triple m
+: type a. a m -> (a, a, [`red], only, nh, nh, nh, not_rev) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -253,6 +254,8 @@ and left_yellow_red
   (fun () ->
   ( left_red e >>= fun k -> return (Path (HOLE, k)) )
   @
+  ( right_red e >>= fun k -> return (Path (HOLE, Triple_rev k)) )
+  @
   ( buffer_ge7 e >>= fun p ->
     not_empty_left_red (stored_triple e) >>= fun (Holy (c, k)) ->
     buffer_eq2 e >>= fun s ->
@@ -296,6 +299,11 @@ and not_empty_left_red
     return (Holy (Pair_left (y, right), k))
   )
   @
+  ( g_path_left e >>= fun (G_path left) ->
+    right_yellow_red e >>= fun (Path (y, k)) ->
+    return (Holy (Pair_left_sym (left, y), k))
+  )
+  @
   ( only_yellow_red e >>= fun (Path (y, k)) ->
     return (Holy (Only_of y, k))
   )
@@ -309,6 +317,11 @@ and not_empty_right_red
   ( g_path_left e >>= fun (G_path left) ->
     right_yellow_red e >>= fun (Path (y, k)) ->
     return (Holy (Pair_right (left, y), k))
+  )
+  @
+  ( left_yellow_red e >>= fun (Path (y, k)) ->
+    g_path_right e >>= fun (G_path right) ->
+    return (Holy (Pair_right_sym (y, right), k))
   )
   @
   ( only_yellow_red e >>= fun (Path (y, k)) ->
@@ -345,7 +358,7 @@ and not_empty_right_green
   ))
 
 and left_green
-: type a. a m -> (a, a, [`green], left, nh, nh, nh) triple m
+: type a. a m -> (a, a, [`green], left, nh, nh, nh, not_rev) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -362,7 +375,7 @@ and left_green
   )
 
 and left_red
-: type a. a m -> (a, a, [`red], left, nh, nh, nh) triple m
+: type a. a m -> (a, a, [`red], left, nh, nh, nh, not_rev) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -373,7 +386,7 @@ and left_red
   )
 
 and right_green
-: type a. a m -> (a, a, [`green], right, nh, nh, nh) triple m
+: type a. a m -> (a, a, [`green], right, nh, nh, nh, not_rev) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -390,7 +403,7 @@ and right_green
   )
 
 and right_red
-: type a. a m -> (a, a, [`red], right, nh, nh, nh) triple m
+: type a. a m -> (a, a, [`red], right, nh, nh, nh, not_rev) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -488,6 +501,7 @@ and semiregular
   (fun () ->
    return (S Void)
    @ ( gr_deque e >>= fun (GR_deq d) -> return (S (T d)) )
+   @ ( gr_deque e >>= fun (GR_deq d) -> return (S (Rev d)) )
   )
 
 and regular
@@ -569,13 +583,13 @@ let test _ deq =
       let lst' = to_list real_deq' in
       assert (to_list (D.concat real_deq real_deq')
               = List.concat [lst; lst']) ;
-      let d1 = (D.concat_semi deq deq') in
-      let d2 = (D.concat_semi deq' deq) in
+      let d1 = D.concat_semi deq deq' in
+      let d2 = D.concat_semi deq' deq in
       let real_deq = D.regular_of_semi d1 in
-      let dlst = to_list (D.regular_of_semi d1) in
+      let dlst = to_list real_deq in
       assert (dlst = un_to_list real_deq) ;
       let real_deq = D.regular_of_semi d2 in
-      let dlst = to_list (D.regular_of_semi d2) in
+      let dlst = to_list real_deq in
       assert (dlst = un_to_list real_deq) ;
       j
     )
