@@ -13,4 +13,9 @@ module Deck = struct
   include Deck
 end
 
+module Deckrev = struct
+  include List_like.Make (Deckrev)
+  include Deckrev
+end
+
 include Deck

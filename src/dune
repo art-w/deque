@@ -1,12 +1,13 @@
 (library
   (public_name deque)
   (modules
-    dequeue steque deck
+    dequeue steque deck deckrev
     list_like deque_sig deque)
   (libraries
     dequeue_internal
     steque_internal
-    deck_internal)
+    deck_internal
+    deckrev_internal)
   (instrumentation (backend bisect_ppx)))
 
 (library
@@ -26,5 +27,12 @@
   (name deck_internal)
   (package deque)
   (modules deck_internal)
+  (libraries dequeue_internal)
+  (instrumentation (backend bisect_ppx)))
+
+(library
+  (name deckrev_internal)
+  (package deque)
+  (modules deckrev_internal)
   (libraries dequeue_internal)
   (instrumentation (backend bisect_ppx)))

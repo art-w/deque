@@ -135,3 +135,4 @@ end
 
 module A = Test (Deque.Dequeue)
 module B = Test (Deque.Deck)
+module C = Test (Deque.Deckrev)

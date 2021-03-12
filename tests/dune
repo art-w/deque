@@ -22,3 +22,8 @@
   (name deck_test)
   (modules deck_test)
   (libraries deque deck_internal dequeue_internal))
+
+(executable
+  (name deckrev_test)
+  (modules deckrev_test)
+  (libraries deque deckrev_internal dequeue_internal))

@@ -21,6 +21,7 @@ cover: clean
 	dune exec --force --instrument-with bisect_ppx tests/dequeue_test.exe
 	dune exec --force --instrument-with bisect_ppx tests/steque_test.exe
 	dune exec --force --instrument-with bisect_ppx tests/deck_test.exe
+	dune exec --force --instrument-with bisect_ppx tests/deckrev_test.exe
 	bisect-ppx-report html
 	bisect-ppx-report summary
 

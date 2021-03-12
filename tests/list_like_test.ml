@@ -552,3 +552,8 @@ let () = Printf.printf "\n%!"
 
 let () = header "Deck"
 module Test_deck = Test (Deque.Deck)
+let () = Printf.printf "\n%!"
+
+let () = header "Deckrev"
+module Test_deckrev = Test (Deque.Deckrev)
+let () = Printf.printf "\n%!"

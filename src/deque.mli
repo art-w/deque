@@ -73,6 +73,13 @@ module Deck : sig
   include Deque_sig.S with type 'a t := 'a t (** @inline *)
 end
 
+(** Same as {! Deck}, but [rev] is also {b O(1)}. *)
+module Deckrev : sig
+  include module type of Deckrev (** @inline *)
+
+  include Deque_sig.S with type 'a t := 'a t (** @inline *)
+end
+
 (** For convenience, the module {! Deck} is also included here as the default: *)
 
 include module type of Deck (** @inline *)

@@ -66,3 +66,7 @@ let () = Printf.printf "\n%!"
 
 let () = Printf.printf "-- Deck -------------------\n%!"
 module D = Test (Deque.Deck)
+let () = Printf.printf "\n%!"
+
+let () = Printf.printf "-- Deckrev ----------------\n%!"
+module E = Test (Deque.Deckrev)
