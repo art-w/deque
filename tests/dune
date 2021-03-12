@@ -4,6 +4,11 @@
   (libraries deque))
 
 (executable
+  (name bench_list)
+  (modules bench_list)
+  (libraries deque unix))
+
+(executable
   (name dequeue_test)
   (modules dequeue_test)
   (libraries deque))
@@ -16,4 +21,4 @@
 (executable
   (name deck_test)
   (modules deck_test)
-  (libraries deque deck_internal))
+  (libraries deque deck_internal dequeue_internal))

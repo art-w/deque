@@ -3,6 +3,10 @@
 test:
 	dune exec --force tests/list_like_test.exe
 
+.PHONY: bench
+bench:
+	dune exec --force tests/bench_list.exe
+
 
 .PHONY: doc
 doc: odoc.css
