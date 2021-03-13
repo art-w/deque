@@ -1,118 +1,131 @@
-include Dequeue_internal
+module Base = struct
+  include Dequeue_internal
 
-let fold_left
-: type a z. (z -> a -> z) -> z -> a s -> z
-= fun f z (T t) ->
+  let fold_left
+  : type a z. (z -> a -> z) -> z -> a s -> z
+  = fun f z (T t) ->
 
-  let list_of_buffer
-  : type b c. (z -> b -> z) -> z -> (b, c) buffer -> z
-  = fun f z buf ->
-    match buf with
-    | B0 -> z
-    | B1 a -> f z a
-    | B2 (a, b) -> f (f z a) b
-    | B3 (a, b, c) -> f (f (f z a) b) c
-    | B4 (a, b, c, d) -> f (f (f (f z a) b) c) d
-    | B5 (a, b, c, d, e) -> f (f (f (f (f z a) b) c) d) e
-  in
+    let list_of_buffer
+    : type b c. (z -> b -> z) -> z -> (b, c) buffer -> z
+    = fun f z buf ->
+      match buf with
+      | B0 -> z
+      | B1 a -> f z a
+      | B2 (a, b) -> f (f z a) b
+      | B3 (a, b, c) -> f (f (f z a) b) c
+      | B4 (a, b, c, d) -> f (f (f (f z a) b) c) d
+      | B5 (a, b, c, d, e) -> f (f (f (f (f z a) b) c) d) e
+    in
 
-  let rec go
-  : type b1 b2 c1 c2.
-    (z -> b1 -> z) -> z -> (b1, b2, c1) deque -> (b2, c2) kont -> z
-  = fun f z deq kont ->
-    match deq with
-    | HOLE -> go_kont f z kont
-    | Yellow (prefix, child, suffix) ->
-        let z = list_of_buffer f z prefix in
-        let z = go (go_pair f) z child kont in
-        list_of_buffer f z suffix
-    | Green (prefix, child, suffix) ->
-        let z = list_of_buffer f z prefix in
-        let z = go (go_pair f) z child kont in
-        list_of_buffer f z suffix
-    | Red (prefix, child, suffix) ->
-        let z = list_of_buffer f z prefix in
-        let z = go (go_pair f) z child kont in
-        list_of_buffer f z suffix
+    let rec go
+    : type b1 b2 c1 c2.
+      (z -> b1 -> z) -> z -> (b1, b2, c1) deque -> (b2, c2) kont -> z
+    = fun f z deq kont ->
+      match deq with
+      | HOLE -> go_kont f z kont
+      | Yellow (prefix, child, suffix) ->
+          let z = list_of_buffer f z prefix in
+          let z = go (go_pair f) z child kont in
+          list_of_buffer f z suffix
+      | Green (prefix, child, suffix) ->
+          let z = list_of_buffer f z prefix in
+          let z = go (go_pair f) z child kont in
+          list_of_buffer f z suffix
+      | Red (prefix, child, suffix) ->
+          let z = list_of_buffer f z prefix in
+          let z = go (go_pair f) z child kont in
+          list_of_buffer f z suffix
 
-  and go_pair
-  : type b. (z -> b -> z) -> z -> (b * b) -> z
-  = fun f z (x, y) -> f (f z x) y
+    and go_pair
+    : type b. (z -> b -> z) -> z -> (b * b) -> z
+    = fun f z (x, y) -> f (f z x) y
 
-  and go_kont
-  : type b c. (z -> b -> z) -> z -> (b, c) kont -> z
-  = fun f z kont ->
-    match kont with
-    | Small buf -> list_of_buffer f z buf
-    | Y (child, kont) -> go f z child kont
-    | R (child, kont) -> go f z child kont
-    | G (child, kont) -> go f z child kont
-  in
+    and go_kont
+    : type b c. (z -> b -> z) -> z -> (b, c) kont -> z
+    = fun f z kont ->
+      match kont with
+      | Small buf -> list_of_buffer f z buf
+      | Y (child, kont) -> go f z child kont
+      | R (child, kont) -> go f z child kont
+      | G (child, kont) -> go f z child kont
+    in
 
-  go_kont f z t
+    go_kont f z t
 
-let fold_right
-: type a z. (a -> z -> z) -> a s -> z -> z
-= fun f (T t) z ->
+  let fold_right
+  : type a z. (a -> z -> z) -> a s -> z -> z
+  = fun f (T t) z ->
 
-  let list_of_buffer
-  : type b c. (b -> z -> z) -> (b, c) buffer -> z -> z
-  = fun f buf z ->
-    match buf with
-    | B0 -> z
-    | B1 a -> f a z
-    | B2 (a, b) -> f a (f b z)
-    | B3 (a, b, c) -> f a (f b (f c z))
-    | B4 (a, b, c, d) -> f a (f b (f c (f d z)))
-    | B5 (a, b, c, d, e) -> f a (f b (f c (f d (f e z))))
-  in
+    let list_of_buffer
+    : type b c. (b -> z -> z) -> (b, c) buffer -> z -> z
+    = fun f buf z ->
+      match buf with
+      | B0 -> z
+      | B1 a -> f a z
+      | B2 (a, b) -> f a (f b z)
+      | B3 (a, b, c) -> f a (f b (f c z))
+      | B4 (a, b, c, d) -> f a (f b (f c (f d z)))
+      | B5 (a, b, c, d, e) -> f a (f b (f c (f d (f e z))))
+    in
 
-  let rec go
-  : type b1 b2 c1 c2.
-    (b1 -> z -> z) -> (b1, b2, c1) deque -> z -> (b2, c2) kont -> z
-  = fun f deq z kont ->
-    match deq with
-    | HOLE -> go_kont f kont z
-    | Yellow (prefix, child, suffix) ->
-        let z = list_of_buffer f suffix z in
-        let z = go (go_pair f) child z kont in
-        list_of_buffer f prefix z
-    | Green (prefix, child, suffix) ->
-        let z = list_of_buffer f suffix z in
-        let z = go (go_pair f) child z kont in
-        list_of_buffer f prefix z
-    | Red (prefix, child, suffix) ->
-        let z = list_of_buffer f suffix z in
-        let z = go (go_pair f) child z kont in
-        list_of_buffer f prefix z
+    let rec go
+    : type b1 b2 c1 c2.
+      (b1 -> z -> z) -> (b1, b2, c1) deque -> z -> (b2, c2) kont -> z
+    = fun f deq z kont ->
+      match deq with
+      | HOLE -> go_kont f kont z
+      | Yellow (prefix, child, suffix) ->
+          let z = list_of_buffer f suffix z in
+          let z = go (go_pair f) child z kont in
+          list_of_buffer f prefix z
+      | Green (prefix, child, suffix) ->
+          let z = list_of_buffer f suffix z in
+          let z = go (go_pair f) child z kont in
+          list_of_buffer f prefix z
+      | Red (prefix, child, suffix) ->
+          let z = list_of_buffer f suffix z in
+          let z = go (go_pair f) child z kont in
+          list_of_buffer f prefix z
 
-  and go_pair
-  : type b. (b -> z -> z) -> (b * b) -> z -> z
-  = fun f (x, y) z -> f x (f y z)
+    and go_pair
+    : type b. (b -> z -> z) -> (b * b) -> z -> z
+    = fun f (x, y) z -> f x (f y z)
 
-  and go_kont
-  : type b c. (b -> z -> z) -> (b, c) kont -> z -> z
-  = fun f kont z ->
-    match kont with
-    | Small buf -> list_of_buffer f buf z
-    | Y (child, kont) -> go f child z kont
-    | R (child, kont) -> go f child z kont
-    | G (child, kont) -> go f child z kont
-  in
+    and go_kont
+    : type b c. (b -> z -> z) -> (b, c) kont -> z -> z
+    = fun f kont z ->
+      match kont with
+      | Small buf -> list_of_buffer f buf z
+      | Y (child, kont) -> go f child z kont
+      | R (child, kont) -> go f child z kont
+      | G (child, kont) -> go f child z kont
+    in
 
-  go_kont f t z
+    go_kont f t z
 
 
-let fold_left f z { length ; s } =
-  if length >= 0
-  then fold_left f z s
-  else fold_right (fun x z -> f z x) s z
+  let fold_left f z { length ; s } =
+    if length >= 0
+    then fold_left f z s
+    else fold_right (fun x z -> f z x) s z
 
-and fold_right f { length ; s } z =
-  if length >= 0
-  then fold_right f s z
-  else fold_left (fun x z -> f z x) z s
+  and fold_right f { length ; s } z =
+    if length >= 0
+    then fold_right f s z
+    else fold_left (fun x z -> f z x) z s
 
+
+  let compare_lengths xs ys = compare (length xs) (length ys)
+
+  let append xs ys =
+    if compare_lengths xs ys <= 0
+    then fold_right cons xs ys
+    else fold_left  snoc xs ys
+
+end
+
+include List_like.Make (Base)
+include Base
 
 let nth
 : type a. a s -> int -> int -> a
@@ -222,10 +235,7 @@ let nth
   in
 
   let search1 : int -> int -> a -> a
-  = fun i s x ->
-    assert (i = 0) ;
-    assert (s = 1) ;
-    x
+  = fun _ _ x -> x
   in
 
   go_kont i j 1 search1 t
@@ -241,6 +251,32 @@ let nth t i =
 let nth_opt t i =
   try Some (nth t i) with Failure _ -> None
 
+
+let rec make
+: type a. int -> a -> (a, [`green]) kont
+= fun n x ->
+  match n with
+  | 0 -> Small B0
+  | 1 -> Small (B1 x)
+  | 2 -> Small (B2 (x, x))
+  | 3 -> Small (B3 (x, x, x))
+  | _ ->
+      let n = n - 4 in
+      begin match n mod 2 with
+      | 0 ->
+          let b = B2 (x, x) in
+          let x2 = (x, x) in
+          G (Green (b, HOLE, b), make (n / 2) x2)
+      | 1 ->
+          let p = B3 (x, x, x) in
+          let s = B2 (x, x) in
+          let x2 = (x, x) in
+          G (Green (p, HOLE, s), make ((n - 1) / 2) x2)
+      | _ ->
+          assert false
+      end
+
+let make n x = { length = n ; s = T (make n x) }
 
 let rec of_list
 : type a. a list -> (a, [`green]) kont
@@ -261,10 +297,3 @@ let rec of_list
 
 let of_list lst =
   { length = List.length lst ; s = T (of_list lst) }
-
-let compare_lengths xs ys = compare (length xs) (length ys)
-
-let append xs ys =
-  if compare_lengths xs ys <= 0
-  then fold_right cons xs ys
-  else fold_left  snoc xs ys

@@ -79,19 +79,12 @@ module Buffer : sig
   type 'a elt = L2R of 'a | R2L of 'a
   type ('a, 'n) t
 
-  val to_dequeue : ('a, _) t -> 'a elt Deq.t
-
   val empty : ('a, z) t
 
   val rev : ('a, 'n) t -> ('a, 'n) t
   val is_rev : ('a, 'n) t -> bool
 
   val elt_out : 'a elt -> ('a, 'n) t -> 'a elt
-
-  (*
-  val cons : 'a -> ('a, 'n) t -> ('a, 'n s) t
-  val snoc : ('a, 'n) t -> 'a -> ('a, 'n s) t
-  *)
 
   val cons : 'a elt -> ('a, 'n) t -> ('a, 'n s) t
   val snoc : ('a, 'n) t -> 'a elt -> ('a, 'n s) t
@@ -132,6 +125,9 @@ module Buffer : sig
     | Lte1 : ('a, _ ge1) t -> 'a has1
   val has1 : ('a, 'n) t -> 'a has1
 
+  val to_dequeue : ('a, _) t -> 'a elt Deq.t
+  val of_dequeue : 'a elt Deq.t -> 'a has1
+
   type 'a has5 =
     | Exact_4 : 'a elt four -> 'a has5
     | At_least_5 : ('a, _ ge5) t -> 'a has5
@@ -169,8 +165,6 @@ end = struct
     if Deq.is_rev t
     then elt_rev x
     else x
-
-  let to_dequeue t = t
 
   let empty = Deq.empty
   let rev t = Deq.rev t
@@ -227,6 +221,13 @@ end = struct
     if Deq.is_empty t
     then Exact_0
     else Lte1 t
+
+  let to_dequeue t = t
+  let of_dequeue d =
+    if Deq.is_empty d
+    then Exact_0
+    else Lte1 d
+
 
   let snoc2 t (a, b) = snoc (snoc t a) b
   let cons2 (a, b) t = cons a (cons b t)

@@ -1,7 +1,4 @@
-module Dequeue = struct
-  include List_like.Make (Dequeue)
-  include Dequeue
-end
+module Dequeue = Dequeue
 
 module Steque = struct
   include List_like.Make (Steque)

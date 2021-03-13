@@ -37,6 +37,11 @@ module type S = sig
       @raise Invalid_argument if [n] is negative.
   *)
 
+  val make : int -> 'a -> 'a t
+  (** [make len x] replicates the value [x] in a new deque of size [len].
+      @raise Invalid_argument if [len] is negative.
+  *)
+
   val init : int -> (int -> 'a) -> 'a t
   (** [init len f] creates a new deque of size [len] such that its [i]th
       element is [f i], evaluated left to right.

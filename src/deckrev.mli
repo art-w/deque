@@ -38,3 +38,8 @@ val fold_right : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
 (** [fold_right f xs z] computes [f x_0 (f x_1 (... (f x_n z)))] where
     [x_0...x_n] are the elements of the deque [xs] in left to right order.
 *)
+
+val of_dequeue : 'a Dequeue.t -> 'a t
+
+(**/**)
+val make : int -> 'a -> 'a t

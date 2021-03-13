@@ -286,3 +286,10 @@ and fold_stored_triple
       buffer_fold_right f p acc
 
 let rev t = fold_left (fun t x -> cons x t) empty t
+
+let of_dequeue d =
+  match Buffer.of_dequeue d with
+  | Buffer.Exact_0 -> Regular Void
+  | Buffer.Lte1 d -> Regular (T (Only_path (Path (HOLE, Only_prefix d))))
+
+let make n x = of_dequeue (Dequeue.make n x)

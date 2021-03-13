@@ -475,6 +475,12 @@ module Test (D : module type of Deque.Dequeue) = struct
     let arr' = D.to_array deq in
     assert (arr = arr')
 
+  let () = test "make" @@ fun () ->
+    for i = 0 to 100 do
+      let deq = D.make i "x" in
+      assert (D.length deq = i)
+    done
+
   let () = test "init" @@ fun () ->
     let f, g, check = make_fs () in
     let lst = List.init input_size f in

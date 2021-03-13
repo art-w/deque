@@ -321,3 +321,15 @@ let fold_left f z t =
 
 let fold_right f t z =
   fold_right (fun x z -> f (unelt x) z) t z
+
+
+let of_buffer d =
+  match Buffer.of_dequeue d with
+  | Buffer.Exact_0 -> Regular Void
+  | Buffer.Lte1 d -> Regular (T (Only_path (Path (HOLE, Only_prefix d))))
+
+let of_dequeue d =
+  let d = Dequeue.map (fun x -> Buffer.L2R x) d in
+  of_buffer d
+
+let make n x = of_buffer (Dequeue.make n (Buffer.L2R x))
