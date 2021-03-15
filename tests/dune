@@ -9,6 +9,11 @@
   (libraries deque unix))
 
 (executable
+  (name bench_append)
+  (modules bench_append)
+  (libraries deque unix))
+
+(executable
   (name dequeue_test)
   (modules dequeue_test)
   (libraries deque))

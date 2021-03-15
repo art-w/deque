@@ -6,6 +6,7 @@ test:
 .PHONY: bench
 bench:
 	dune exec --force tests/bench_list.exe
+	dune exec --force tests/bench_append.exe > tests/bench.tsv && cd tests && ./bench.gp
 
 
 .PHONY: doc

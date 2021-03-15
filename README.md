@@ -2,20 +2,36 @@
 > by Haim Kaplan and Robert E. Tarjan \
 > journal of the ACM 31:11-16 (1999) 1709-1723 https://doi.org/10.1145/324133.324139
 
-Following the paper, this library provides 3 implementations of double-ended
-queues which let you push, pop and append elements at both ends of the list in
-worst-case constant time (strict! not amortized) :
+Following the paper, this library provides 4 implementations of double-ended
+queues which let you push, pop and append elements at both ends of an ordered
+collection in worst-case constant time (strict! not amortized) :
 
 | Module  | cons | uncons | snoc | unsnoc          | append          | rev             | nth                |
 |---------|:----:|:------:|:----:|:---------------:|:---------------:|:---------------:|:------------------:|
 | Dequeue | O(1) | O(1)   | O(1) | O(1)            | :no_entry_sign: | O(1)            | O(log min(i, N-i)) |
 | Steque  | O(1) | O(1)   | O(1) | :no_entry_sign: | O(1)            | :no_entry_sign: | :no_entry_sign:    |
-| Deck    | O(1) | O(1)   | O(1) | O(1)            | O(1)            |                 | :no_entry_sign:    |
+| Deck    | O(1) | O(1)   | O(1) | O(1)            | O(1)            | :no_entry_sign: | :no_entry_sign:    |
+| Deckrev | O(1) | O(1)   | O(1) | O(1)            | O(1)            | O(1)            | :no_entry_sign:    |
 
 Check out the [online documentation] for the full interface -- which should be
 mostly compatible with OCaml's standard [List] module.
 
-Example applications of these deques include:
+---
+
+Even though their complexity is fantastic, these deques come with a significant
+overhead in comparison to lists:
+
+|             | List | Dequeue | Steque | Deck  | Deckrev |
+|------------:|-----:|--------:|-------:|------:|--------:|
+| `cons`      | 1x   | 1.5x   | 1.6x    | 1.6x  | 2.5x    |
+| `uncons`    | 1x   | 13x    | 13x     | 19x   | 22x     |
+| `fold_left` | 1x   | 4.5x   | 4.5x    | 4.5x  | 11.1x   |
+
+![appending a list with itself](https://art-w.github.io/deque/append.png)
+
+---
+
+Example applications include:
 
 - [ngrams.ml](examples/ngrams.ml) uses a sliding window to enumerate the ngrams
   of a string.
@@ -28,7 +44,7 @@ Example applications of these deques include:
   purely functional libraries. Surprisingly, this benchmark reveals that the
   simpler [difference lists] may exhibit weird edge cases in addition to being
   less flexible. See [Reflection without remorse] by Atze van der Ploeg and
-  Oleg Kiselyov for a less obvious application to monadic computations.
+  Oleg Kiselyov for a non-obvious application to monadic computations.
 - [zipper.ml](examples/zipper.ml) is a classic zipper to iterate over an
   ordered collection, with the added benefit that one can instantly close the
   traversal in `O(1)` rather than `O(length traversed)`. Such a zipper is a
