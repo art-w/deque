@@ -5,13 +5,10 @@ module type S = sig
 
   (** {1 List} *)
 
-  (** Since a double-ended queue is most similar to an ['a list], the following
+  (** Since a double-ended queue is most similar to a list, the following
       functions are provided to match the signature and behaviour of the
       standard {! List} module.
   *)
-
-  val length : 'a t -> int
-  (** [length xs] returns the number of elements contained in [xs]. *)
 
   val hd : 'a t -> 'a
   (** [hd xs] returns the left-most element of [xs].
@@ -97,7 +94,7 @@ module type S = sig
       element as its first argument (counting from 0). *)
 
   val rev_map : ('a -> 'b) -> 'a t -> 'b t
-  (** [rev_map f xs] gives the same result as [map f (rev xs)]. *)
+  (** [rev_map f xs] gives the same result as [rev (map f xs)]. *)
 
   val filter_map : ('a -> 'b option) -> 'a t -> 'b t
   (** [filter_map f xs] applies [f] to each element of [xs], filtering out the
@@ -109,6 +106,16 @@ module type S = sig
   val fold_left_map : ('a -> 'b -> 'a * 'c) -> 'a -> 'b t -> 'a * 'c t
   (** [fold_left_map f z xs] is a combination of [fold_left] and [map] that
       threads an accumulator [z] through calls to [f].
+  *)
+
+  val fold_left  : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
+  (** [fold_left f z xs] computes [f (... (f (f z x_0) x_1) ...) x_n] where
+      [x_0...x_n] are the elements of the deque [xs] in left to right order.
+  *)
+
+  val fold_right : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+  (** [fold_right f xs z] computes [f x_0 (f x_1 (... (f x_n z)))] where
+      [x_0...x_n] are the elements of the deque [xs] in left to right order.
   *)
 
   (** {1 Iterators on two deques} *)

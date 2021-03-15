@@ -49,15 +49,8 @@ module Dequeue : sig
   val rev : 'a t -> 'a t
   (** [rev xs] reverses the order of the elements of [xs]. {b O(1)} *)
 
-  val fold_left  : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
-  (** [fold_left f z xs] computes [f (... (f (f z x_0) x_1) ...) x_n] where
-      [x_0...x_n] are the elements of the deque [xs] in left to right order.
-  *)
-
-  val fold_right : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-  (** [fold_right f xs z] computes [f x_0 (f x_1 (... (f x_n z)))] where
-      [x_0...x_n] are the elements of the deque [xs] in left to right order.
-  *)
+  val length : 'a t -> int
+  (** [length xs] returns the number of elements contained in [xs]. {b O(1)} *)
 
   include Deque_sig.S with type 'a t := 'a t (** @inline *)
 end
@@ -83,6 +76,6 @@ module Deckrev : sig
   include Deque_sig.S with type 'a t := 'a t (** @inline *)
 end
 
-(** For convenience, the module {! Deck} is also included here as the default: *)
+(** For convenience, the module {! Deck} is also included here as the recommended implementation: *)
 
 include module type of Deck (** @inline *)

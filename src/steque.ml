@@ -103,3 +103,5 @@ let of_dequeue d = T (Suffix d)
 let make n x = of_dequeue (Dequeue.make n x)
 
 let singleton x = of_dequeue (Dequeue.singleton x)
+
+let length t = fold_left (fun s _ -> s + 1) 0 t

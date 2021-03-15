@@ -335,3 +335,5 @@ let of_dequeue d =
 let make n x = of_buffer (Dequeue.make n (Buffer.L2R x))
 
 let singleton x = of_dequeue (Dequeue.singleton x)
+
+let length t = fold_left (fun s _ -> s + 1) 0 t
