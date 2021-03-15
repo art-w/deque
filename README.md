@@ -16,16 +16,14 @@ collection in worst-case constant time (strict! not amortized) :
 Check out the [online documentation] for the full interface -- which should be
 mostly compatible with OCaml's standard [List] module.
 
----
-
-Even though their complexity is fantastic, these deques come with a significant
-overhead in comparison to lists:
+Even though the algorithmic complexity is great, these deques add a significant
+overhead when compared to lists:
 
 |             | List | Dequeue | Steque | Deck  | Deckrev |
 |------------:|-----:|--------:|-------:|------:|--------:|
-| `cons`      | 1x   | 1.5x   | 1.6x    | 1.6x  | 2.5x    |
-| `uncons`    | 1x   | 13x    | 13x     | 19x   | 22x     |
-| `fold_left` | 1x   | 4.5x   | 4.5x    | 4.5x  | 11.1x   |
+| `cons`      | 1x   | 1.5x    | 1.6x    | 1.6x  | 2.5x    |
+| `uncons`    | 1x   | 13x     | 13x     | 19x   | 22x     |
+| `fold_left` | 1x   | 4.5x    | 4.5x    | 4.5x  | 11.1x   |
 
 ![appending a list with itself](https://art-w.github.io/deque/append.png)
 
