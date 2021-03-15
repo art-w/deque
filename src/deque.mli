@@ -27,6 +27,9 @@ module Dequeue : sig
   val cons : 'a -> 'a t -> 'a t
   (** [cons x xs] adds an element [x] to the front of the deque [xs]. {b O(1)} *)
 
+  val singleton : 'a -> 'a t
+  (** [singleton x] returns a deque containing only a single element [x]. *)
+
   val uncons : 'a t -> ('a * 'a t) option
   (** [uncons xs] pops the left-most element of the deque [xs]. {b O(1)}
       @return [None] if the deque is empty.

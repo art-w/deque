@@ -333,3 +333,5 @@ let of_dequeue d =
   of_buffer d
 
 let make n x = of_buffer (Dequeue.make n (Buffer.L2R x))
+
+let singleton x = of_dequeue (Dequeue.singleton x)

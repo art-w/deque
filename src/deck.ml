@@ -293,3 +293,5 @@ let of_dequeue d =
   | Buffer.Lte1 d -> Regular (T (Only_path (Path (HOLE, Only_prefix d))))
 
 let make n x = of_dequeue (Dequeue.make n x)
+
+let singleton x = of_dequeue (Dequeue.singleton x)

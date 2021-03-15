@@ -101,3 +101,5 @@ let rev t = fold_left (fun t x -> cons x t) empty t
 let of_dequeue d = T (Suffix d)
 
 let make n x = of_dequeue (Dequeue.make n x)
+
+let singleton x = of_dequeue (Dequeue.singleton x)

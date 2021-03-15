@@ -7,6 +7,9 @@ val empty : 'a t
 val is_empty : 'a t -> bool
 (** [is_empty xs] returns [true] when the deque [xs] contains no elements, [false] if at least one. *)
 
+val singleton : 'a -> 'a t
+(** [singleton x] returns a deque containing only a single element [x]. *)
+
 val cons : 'a -> 'a t -> 'a t
 (** [cons x xs] adds an element [x] to the front of the deque [xs]. {b O(1)} *)
 

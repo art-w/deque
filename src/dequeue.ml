@@ -297,3 +297,6 @@ let rec of_list
 
 let of_list lst =
   { length = List.length lst ; s = T (of_list lst) }
+
+let singleton x =
+  { length = 1 ; s = T (Small (B1 x)) }
