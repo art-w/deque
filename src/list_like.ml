@@ -11,6 +11,8 @@ module type DEQUE = sig
 
   val rev : 'a t -> 'a t
   val append : 'a t -> 'a t -> 'a t
+
+  val length : 'a t -> int
 end
 
 module type DEQUE_CAT = sig
@@ -20,8 +22,6 @@ module type DEQUE_CAT = sig
 end
 
 module Make (D : DEQUE) = struct
-
-  let length t = D.fold_left (fun s _ -> s + 1) 0 t
 
   let hd t = match D.uncons t with
     | None -> failwith "Deque.hd"
@@ -178,7 +178,7 @@ module Make (D : DEQUE) = struct
     match D.uncons t with
     | None -> [| |]
     | Some (x, t) ->
-      let n = length t in
+      let n = D.length t in
       let arr = Array.make (n + 1) x in
       iteri (fun i x -> arr.(i + 1) <- x) t ;
       arr
