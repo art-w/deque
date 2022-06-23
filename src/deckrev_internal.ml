@@ -1,5 +1,7 @@
 module Deq = Dequeue_internal
 
+open Deq.ColorsGYRO
+
 type 'a pr = out_channel -> 'a -> unit
 
 type nh_ = NOT_HOLE
@@ -386,144 +388,144 @@ and ('a, 'b, 'color, 'kind, 'hole_loc, 'is_hole, 'has_hole, 'is_rev) triple =
               -> ('a, 'b, 'c, 'k2 * 'k1, 'hl2 * 'hl1, 'ih, 'hh, is_rev) triple
 
   | HOLE : ('a, 'a,
-            [< `yellow | `orange],
+            ((notgreen * _ * notred) * _),
             (_*_) as 'k, 'k,
             is_hole, has_hole,
             _*_)
            triple
 
   | Only_prefix : ('a, _ ge1) prefix
-               -> ('a, 'a, [`green], only, nh, nh, nh, not_rev) triple
+               -> ('a, 'a, is_green, only, nh, nh, nh, not_rev) triple
   | Only_green :
            ('a, _ ge8) prefix
-         * ('a stored_triple, [< `green | `red]) deque
+         * ('a stored_triple, (_ * notyellow * _) * notorange) deque
          * ('a, _ ge8) suffix
-        -> ('a, 'a, [`green], only, nh, nh, nh, not_rev) triple
+        -> ('a, 'a, is_green, only, nh, nh, nh, not_rev) triple
   | Only_yellow :
            ('a, _ ge7) prefix
          * ('a stored_triple, 'b, preferred_left, 'hole) not_empty
          * ('a, _ ge7) suffix
-        -> ('a, 'b, [`yellow], only, 'hole, nh, has_hole, not_rev) triple
+        -> ('a, 'b, is_yellow, only, 'hole, nh, has_hole, not_rev) triple
   | Only_orange :
            ('a, _ ge6) prefix
          * ('a stored_triple, 'b, preferred_right, 'hole) not_empty
          * ('a, _ ge6) suffix
-        -> ('a, 'b, [`orange], only, 'hole, nh, has_hole, not_rev) triple
+        -> ('a, 'b, is_orange, only, 'hole, nh, has_hole, not_rev) triple
   | Only_red :
            ('a, _ ge5) prefix
-         * ('a stored_triple, [`green]) deque
+         * ('a stored_triple, is_green) deque
          * ('a, _ ge5) suffix
-        -> ('a, 'a, [`red], only, nh, nh, nh, not_rev) triple
+        -> ('a, 'a, is_red, only, nh, nh, nh, not_rev) triple
 
   | Left_small :
            ('a, _ ge5) prefix
          * ('a, eq2) suffix
-        -> ('a, 'b, [`green], left, nh, nh, nh, not_rev) triple
+        -> ('a, 'b, is_green, left, nh, nh, nh, not_rev) triple
   | Left_green :
            ('a, _ ge8) prefix
-         * ('a stored_triple, [< `green | `red]) deque
+         * ('a stored_triple, (_ * notyellow * _) * notorange) deque
          * ('a, eq2) suffix
-        -> ('a, 'a, [`green], left, nh, nh, nh, not_rev) triple
+        -> ('a, 'a, is_green, left, nh, nh, nh, not_rev) triple
   | Left_yellow :
            ('a, _ ge7) prefix
          * ('a stored_triple, 'b, preferred_left, 'hole) not_empty
          * ('a, eq2) suffix
-        -> ('a, 'b, [`yellow], left, 'hole, nh, has_hole, not_rev) triple
+        -> ('a, 'b, is_yellow, left, 'hole, nh, has_hole, not_rev) triple
   | Left_orange :
            ('a, _ ge6) prefix
          * ('a stored_triple, 'b, preferred_right, 'hole) not_empty
          * ('a, eq2) suffix
-        -> ('a, 'b, [`orange], left, 'hole, nh, has_hole, not_rev) triple
+        -> ('a, 'b, is_orange, left, 'hole, nh, has_hole, not_rev) triple
   | Left_red :
            ('a, _ ge5) prefix
-         * ('a stored_triple, [`green]) deque
+         * ('a stored_triple, is_green) deque
          * ('a, eq2) suffix
-        -> ('a, 'a, [`red], left, nh, nh, nh, not_rev) triple
+        -> ('a, 'a, is_red, left, nh, nh, nh, not_rev) triple
 
   | Right_small :
            ('a, eq2) prefix
          * ('a, _ ge5) suffix
-        -> ('a, 'b, [`green], right, nh, nh, nh, not_rev) triple
+        -> ('a, 'b, is_green, right, nh, nh, nh, not_rev) triple
   | Right_green :
            ('a, eq2) prefix
-         * ('a stored_triple, [< `green | `red]) deque
+         * ('a stored_triple, (_ * notyellow * _) * notorange) deque
          * ('a, _ ge8) suffix
-        -> ('a, 'a, [`green], right, nh, nh, nh, not_rev) triple
+        -> ('a, 'a, is_green, right, nh, nh, nh, not_rev) triple
   | Right_yellow :
            ('a, eq2) prefix
          * ('a stored_triple, 'b, preferred_left, 'hole) not_empty
          * ('a, _ ge7) suffix
-        -> ('a, 'b, [`yellow], right, 'hole, nh, has_hole, not_rev) triple
+        -> ('a, 'b, is_yellow, right, 'hole, nh, has_hole, not_rev) triple
   | Right_orange :
            ('a, eq2) prefix
          * ('a stored_triple, 'b, preferred_right, 'hole) not_empty
          * ('a, _ ge6) suffix
-        -> ('a, 'b, [`orange], right, 'hole, nh, has_hole, not_rev) triple
+        -> ('a, 'b, is_orange, right, 'hole, nh, has_hole, not_rev) triple
   | Right_red :
            ('a, eq2) prefix
-         * ('a stored_triple, [`green]) deque
+         * ('a stored_triple, is_green) deque
          * ('a, _ ge5) suffix
-        -> ('a, 'a, [`red], right, nh, nh, nh, not_rev) triple
+        -> ('a, 'a, is_red, right, nh, nh, nh, not_rev) triple
 
 and ('a, 'b, 'preference, 'hole_loc) not_empty =
   | Only_of :
-       ('a, 'b, [< `yellow | `orange], only,
+       ('a, 'b, (notgreen * _ * notred) * _, only,
         (_*_) as 'hole_loc, _, has_hole, _*_) triple
     -> ('a, 'b, _, 'hole_loc) not_empty
 
   | Pair_left :
-       ('a, 'b, [< `yellow | `orange], left,
+       ('a, 'b, (notgreen * _ * notred) * _, left,
         (_*_) as 'hole_loc, _, has_hole, _*_) triple
      * ('a, _, right) path
     -> ('a, 'b, preferred_left, 'hole_loc) not_empty
 
   | Pair_right :
-       ('a, [`green], left) path
-     * ('a, 'b, [< `yellow | `orange], right,
+       ('a, is_green, left) path
+     * ('a, 'b, (notgreen * _ * notred) * _, right,
         (_*_) as 'hole_loc, _, has_hole, _*_) triple
     -> ('a, 'b, preferred_right, 'hole_loc) not_empty
 
   | Pair_left_sym :
        ('a, _, left) path
-     * ('a, 'b, [< `yellow | `orange], right,
+     * ('a, 'b, (notgreen * _ * notred) * _, right,
         'hole_loc, _, has_hole, _*_) triple
     -> ('a, 'b, preferred_left, 'hole_loc) not_empty
 
   | Pair_right_sym :
-       ('a, 'b, [< `yellow | `orange], left,
+       ('a, 'b, (notgreen * _ * notred) * _, left,
         'hole_loc, _, has_hole, _*_) triple
-     * ('a, [`green], right) path
+     * ('a, is_green, right) path
     -> ('a, 'b, preferred_right, 'hole_loc) not_empty
 
 and ('a, 'color, 'kind) path =
   | Path :
-       ('a, 'b, [< `yellow | `orange],
+       ('a, 'b, (notgreen * _ * notred) * _,
         (_*_) as 'kind, (_*_) as 'hole_loc, _, has_hole, _*_) triple
-     * ('b, 'b, [< `green | `red] as 'color, 'hole_loc, nh, nh, nh, _*_) triple
+     * ('b, 'b, ((_ * notyellow * _) * notorange) as 'color, 'hole_loc, nh, nh, nh, _*_) triple
     -> ('a, 'color, 'kind) path
 
 and ('a, 'parent_color) deque =
-  | Only_path : ('a, [< `green | `red] as 'c, only) path -> ('a, 'c) deque
+  | Only_path : ('a, ((_ * notyellow * _) * notorange) as 'c, only) path -> ('a, 'c) deque
   | Pair_green :
         ('a, _, left) path
       * ('a, _, right) path
-     -> ('a, [`red]) deque
+     -> ('a, is_red) deque
   | Pair_red :
-        ('a, [`green], left) path
-      * ('a, [`green], right) path
-     -> ('a, [`green]) deque
+        ('a, is_green, left) path
+      * ('a, is_green, right) path
+     -> ('a, is_green) deque
 
-and 'a green_deque = ('a, [`green]) deque
-and 'a red_deque = ('a, [`red]) deque
+and 'a green_deque = ('a, is_green) deque
+and 'a red_deque = ('a, is_red) deque
 
 and ('a, 'c) st =
-  | Void : ('a, [`green]) st
-  | T    : ('a, [< `green | `red] as 'c) deque -> ('a, 'c) st
-  | Rev  : ('a, [< `green | `red] as 'c) deque -> ('a, 'c) st
+  | Void : ('a, is_green) st
+  | T    : ('a, ((_ * notyellow * _) * notorange) as 'c) deque -> ('a, 'c) st
+  | Rev  : ('a, ((_ * notyellow * _) * notorange) as 'c) deque -> ('a, 'c) st
 
 type 'a semi = S : ('a, _) st -> 'a semi
 
-type 'a t = Regular : ('a, [`green]) st -> 'a t
+type 'a t = Regular : ('a, is_green) st -> 'a t
 
 let empty = Regular Void
 
@@ -834,8 +836,8 @@ let snoc_semi_vector t v = vector_fold_left (fun t x -> snoc_semi t x) t v
 
 
 type _ green_or_red =
-  | Is_green : [`green] green_or_red
-  | Is_red   : [`red  ] green_or_red
+  | Is_green : is_green green_or_red
+  | Is_red   : is_red green_or_red
 
 let color
 : type a c hl r. (a, a, c, hl, nh, nh, nh, r) triple -> c green_or_red
@@ -880,12 +882,12 @@ let color_st
 
 type 'a pref_left =
   | Pref_left : ('a, 'b, preferred_left, (_*_) as 'hole2) not_empty
-              * ('b, 'b, [< `green | `red], 'hole2, nh, nh, nh, _*_) triple
+              * ('b, 'b, (_ * notyellow * _) * notorange, 'hole2, nh, nh, nh, _*_) triple
              -> 'a pref_left
 
 type 'a pref_right =
   | Pref_right : ('a, 'b, preferred_right, (_*_) as 'hole2) not_empty
-               * ('b, 'b, [< `green | `red], 'hole2, nh, nh, nh, _*_) triple
+               * ('b, 'b, (_ * notyellow * _) * notorange, 'hole2, nh, nh, nh, _*_) triple
               -> 'a pref_right
 
 let pref_left
@@ -898,7 +900,7 @@ let pref_left
 let pref_right
 : type a b h1 h2 r1 r2.
      (a, b, preferred_left, h1 * h2) not_empty
-  -> (b, b, [< `green | `red], h1 * h2, nh, nh, nh, r1 * r2) triple
+  -> (b, b, (_ * notyellow * _) * notorange, h1 * h2, nh, nh, nh, r1 * r2) triple
   -> a pref_right
 = fun deq ft ->
   match deq with
@@ -911,8 +913,8 @@ let pref_right
 let no_pref
 : type a b h1 h2 r1 r2.
      (a, b, preferred_right, h1 * h2) not_empty
-  -> (b, b, [`green], h1 * h2, nh, nh, nh, r1 * r2) triple
-  -> (a, [`green]) deque
+  -> (b, b, is_green, h1 * h2, nh, nh, nh, r1 * r2) triple
+  -> (a, is_green) deque
 = fun d1 ght ->
   match d1 with
   | Only_of ri ->
@@ -1105,9 +1107,9 @@ let extract_stored_right
 
 type ('a, 'color, 'kind) path_not_rev =
   Path_nr :
-       ('a, 'b, [< `yellow | `orange],
+       ('a, 'b, (notgreen * _ * notred) * _,
         (_*_) as 'kind, (_*_) as 'hole_loc, _, has_hole, not_rev) triple
-     * ('b, 'b, [< `green | `red] as 'color,
+     * ('b, 'b, ((_ * notyellow * _) * notorange) as 'color,
         'hole_loc, nh, nh, nh, not_rev) triple
     -> ('a, 'color, 'kind) path_not_rev
 
@@ -1195,7 +1197,7 @@ let right_of_pair
 type (_, _, _) path_attempt =
   | Small : ('a Buffer.elt, eq6) vector -> ('a, _, _) path_attempt
   | Ok : ('a, 'c, 'k) path -> ('a, 'c, 'k) path_attempt
-  | Any : ('a, _, 'k) path -> ('a, [`red], 'k) path_attempt
+  | Any : ('a, _, 'k) path -> ('a, is_red, 'k) path_attempt
 
 let left_of_only
 : type a c. (a, c, only) path -> (a, c, left) path_attempt
@@ -1370,7 +1372,7 @@ let semi_of_right
       S (T (Only_path (Path (HOLE, Only_red (p2, d2, s2)))))
 
 let uncons_green_left
-: type a. (a, [`green], left) path -> a Buffer.elt * (a, left) color_path
+: type a. (a, is_green, left) path -> a Buffer.elt * (a, left) color_path
 = fun left ->
   match path_not_rev left with
   | Path_nr (HOLE, Left_small (p1, s1)) ->
@@ -1399,7 +1401,7 @@ let uncons_green_left
       x, Any path
 
 let unsnoc_green_right
-: type a. (a, [`green], right) path -> (a, right) color_path * a Buffer.elt
+: type a. (a, is_green, right) path -> (a, right) color_path * a Buffer.elt
 = fun right ->
   match path_not_rev right with
   | Path_nr (HOLE, Right_small (p1, s1)) ->
@@ -1428,7 +1430,7 @@ let unsnoc_green_right
       Any path, x
 
 let uncons_green
-: type a. (a, [`green]) deque -> a Buffer.elt * a semi
+: type a. (a, is_green) deque -> a Buffer.elt * a semi
 = function
   | Only_path path ->
       begin match path_not_rev path with
@@ -1466,7 +1468,7 @@ let uncons_green
          end
 
 let unsnoc_green
-: type a. (a, [`green]) deque -> a semi * a Buffer.elt
+: type a. (a, is_green) deque -> a semi * a Buffer.elt
 = function
   | Only_path path ->
       begin match path_not_rev path with
@@ -1539,7 +1541,7 @@ type _ sandwich =
   | Sandwich : 'a Buffer.elt * 'a semi * 'a Buffer.elt -> 'a sandwich
 
 let unsandwich_green
-: type a. (a, [`green]) deque -> a sandwich
+: type a. (a, is_green) deque -> a sandwich
 = function
   | Only_path path ->
       begin match path_not_rev path with
@@ -1630,7 +1632,7 @@ let only_small
 : type a.
      (a, _ ge8) prefix
   -> (a, _ ge8) suffix
-  -> (a, a, [`green], only, nh, nh, nh, not_rev) triple
+  -> (a, a, is_green, only, nh, nh, nh, not_rev) triple
 = fun p2 s2 ->
   match Buffer.has3p8 s2 with
   | Buffer.Less_than_11 (eight, vec) ->
@@ -1649,7 +1651,7 @@ let only_green p2 d2 s2 = match d2 with
 let ensure_green
 : type a ho c r.
      (a, a, c, ho, nh, nh, nh, r) triple
-  -> (a, a, [`green], ho, nh, nh, nh, not_rev) triple
+  -> (a, a, is_green, ho, nh, nh, nh, not_rev) triple
 = fun t ->
   let t = triple_not_rev t in
   match color t, t with
@@ -1708,11 +1710,11 @@ let ensure_green
       end
 
 let ensure_green_path
-: type a c k. (a, c, k) path -> (a, [`green], k) path
+: type a c k. (a, c, k) path -> (a, is_green, k) path
 = fun (Path (y, g)) -> Path (y, ensure_green g)
 
 let ensure_green_deque
-: type a c. (a, c) deque -> (a, [`green]) deque
+: type a c. (a, c) deque -> (a, is_green) deque
 = function
   | Only_path p -> Only_path (ensure_green_path p)
   | Pair_red (a, b) -> Pair_red (a, b)

@@ -18,8 +18,8 @@ module Base = struct
     in
 
     let rec go
-    : type b1 b2 c1 c2.
-      (z -> b1 -> z) -> z -> (b1, b2, c1) deque -> (b2, c2) kont -> z
+    : type b1 b2 c1 c2 k.
+      (z -> b1 -> z) -> z -> (b1, b2, c1, k) deque -> (b2, c2) kont -> z
     = fun f z deq kont ->
       match deq with
       | HOLE -> go_kont f z kont
@@ -69,8 +69,8 @@ module Base = struct
     in
 
     let rec go
-    : type b1 b2 c1 c2.
-      (b1 -> z -> z) -> (b1, b2, c1) deque -> z -> (b2, c2) kont -> z
+    : type b1 b2 c1 c2 k.
+      (b1 -> z -> z) -> (b1, b2, c1, k) deque -> z -> (b2, c2) kont -> z
     = fun f deq z kont ->
       match deq with
       | HOLE -> go_kont f kont z
@@ -126,6 +126,7 @@ end
 
 include List_like.Make (Base)
 include Base
+open ColorsGYR
 
 let nth
 : type a. a s -> int -> int -> a
@@ -178,12 +179,12 @@ let nth
   in
 
   let rec go
-  : type b1 b2 c1 c2.
+  : type b1 b2 c1 c2 k.
        int
     -> int
     -> int
     -> (int -> int -> b1 -> a)
-    -> (b1, b2, c1) deque
+    -> (b1, b2, c1, k) deque
     -> (b2, c2) kont
     -> a
   = fun i j s search deq kont ->
@@ -197,14 +198,14 @@ let nth
         go_level i j s search prefix suffix child kont
 
   and go_level
-  : type b1 c1 c2 c3 d3 d4.
+  : type b1 c1 c2 c3 d3 d4 k.
        int
     -> int
     -> int
     -> (int -> int -> b1 -> a)
     -> (b1, c1) buffer
     -> (b1, c2) buffer
-    -> (b1 * b1, c3, d3) deque
+    -> (b1 * b1, c3, d3, k) deque
     -> (c3, d4) kont
     -> a
   = fun i j s search prefix suffix child kont ->
@@ -253,7 +254,7 @@ let nth_opt t i =
 
 
 let rec make
-: type a. int -> a -> (a, [`green]) kont
+: type a. int -> a -> (a, is_green) kont
 = fun n x ->
   match n with
   | 0 -> Small B0
@@ -279,7 +280,7 @@ let rec make
 let make n x = { length = n ; s = T (make n x) }
 
 let rec of_list
-: type a. a list -> (a, [`green]) kont
+: type a. a list -> (a, is_green) kont
 = function
   | [] -> Small B0
   | [a] -> Small (B1 a)

@@ -62,6 +62,7 @@ let iteri f d xs = iteri 0 f d xs
 
 module D = Deck_internal
 open D
+open Dequeue_internal.ColorsGYRO
 
 let rec list_gen size m =
   if size <= 0
@@ -92,19 +93,19 @@ let buffer_ge1 e : ('a, z ge1) Buffer.t m = buffer_make e (1 + Random.int 6)
 
 type ('a, 'preference, 'color) holy =
   | Holy : ('a, 'b, 'preference, 'hole_loc) not_empty
-         * ('b, 'b, [< `green | `red] as 'color, 'hole_loc, nh, nh, nh) triple
+         * ('b, 'b, ((_ * notyellow * _) * notorange) as 'color, 'hole_loc, nh, nh, nh) triple
         -> ('a, 'preference, 'color) holy
 
 type ('a, 'preference) unholy =
   | Unholy : ('a, 'a, 'preference, nh) not_empty
           -> ('a, 'preference) unholy
 
-type 'a gr_deque = GR_deq : ('a, [< `green | `red]) deque -> 'a gr_deque
-type 'a g_deque = G_deq : ('a, [`green]) deque -> 'a g_deque
+type 'a gr_deque = GR_deq : ('a, (_ * notyellow * _) * notorange) deque -> 'a gr_deque
+type 'a g_deque = G_deq : ('a, is_green) deque -> 'a g_deque
 
 type ('a, 'k) gr_path =
-  GR_path : ('a, [< `green | `red], 'k) path -> ('a, 'k) gr_path
-type ('a, 'k) g_path = G_path : ('a, [`green], 'k) path -> ('a, 'k) g_path
+  GR_path : ('a, (_ * notyellow * _) * notorange, 'k) path -> ('a, 'k) gr_path
+type ('a, 'k) g_path = G_path : ('a, is_green, 'k) path -> ('a, 'k) g_path
 
 let rec stored_triple
 : type a. a m -> a stored_triple m
@@ -134,7 +135,7 @@ let rec stored_triple
   )
 
 and only_green
-: type a. a m -> (a, a, [`green], only, nh, nh, nh) triple m
+: type a. a m -> (a, a, is_green, only, nh, nh, nh) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -147,7 +148,7 @@ and only_green
   ))
 
 and only_red
-: type a. a m -> (a, a, [`red], only, nh, nh, nh) triple m
+: type a. a m -> (a, a, is_red, only, nh, nh, nh) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -158,7 +159,7 @@ and only_red
   )
 
 and only_yellow_green
-: type a. a m -> (a, [`green], only) path m
+: type a. a m -> (a, is_green, only) path m
 = fun e ->
   Nest
   (fun () ->
@@ -181,7 +182,7 @@ and only_yellow_green
   )
 
 and only_yellow_red
-: type a. a m -> (a, [`red], only) path m
+: type a. a m -> (a, is_red, only) path m
 = fun e ->
   Nest
   (fun () ->
@@ -204,7 +205,7 @@ and only_yellow_red
   )
 
 and left_yellow_green
-: type a. a m -> (a, [`green], left) path m
+: type a. a m -> (a, is_green, left) path m
 = fun e ->
   Nest
   (fun () ->
@@ -227,7 +228,7 @@ and left_yellow_green
   )
 
 and right_yellow_green
-: type a. a m -> (a, [`green], right) path m
+: type a. a m -> (a, is_green, right) path m
 = fun e ->
   Nest
   (fun () ->
@@ -247,7 +248,7 @@ and right_yellow_green
   )
 
 and left_yellow_red
-: type a. a m -> (a, [`red], left) path m
+: type a. a m -> (a, is_red, left) path m
 = fun e ->
   Nest
   (fun () ->
@@ -267,7 +268,7 @@ and left_yellow_red
   )
 
 and right_yellow_red
-: type a. a m -> (a, [`red], right) path m
+: type a. a m -> (a, is_red, right) path m
 = fun e ->
   Nest
   (fun () ->
@@ -287,7 +288,7 @@ and right_yellow_red
   )
 
 and not_empty_left_red
-: type a. a m -> (a, preferred_left, [`red]) holy m
+: type a. a m -> (a, preferred_left, is_red) holy m
 = fun e ->
   Nest
   (fun () ->
@@ -302,7 +303,7 @@ and not_empty_left_red
   )
 
 and not_empty_right_red
-: type a. a m -> (a, preferred_right, [`red]) holy m
+: type a. a m -> (a, preferred_right, is_red) holy m
 = fun e ->
   Nest
   (fun () ->
@@ -316,7 +317,7 @@ and not_empty_right_red
   ))
 
 and not_empty_left_green
-: type a. a m -> (a, preferred_left, [`green]) holy m
+: type a. a m -> (a, preferred_left, is_green) holy m
 = fun e ->
   Nest
   (fun () ->
@@ -330,7 +331,7 @@ and not_empty_left_green
   ))
 
 and not_empty_right_green
-: type a. a m -> (a, preferred_right, [`green]) holy m
+: type a. a m -> (a, preferred_right, is_green) holy m
 = fun e ->
   Nest
   (fun () ->
@@ -345,7 +346,7 @@ and not_empty_right_green
   ))
 
 and left_green
-: type a. a m -> (a, a, [`green], left, nh, nh, nh) triple m
+: type a. a m -> (a, a, is_green, left, nh, nh, nh) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -362,7 +363,7 @@ and left_green
   )
 
 and left_red
-: type a. a m -> (a, a, [`red], left, nh, nh, nh) triple m
+: type a. a m -> (a, a, is_red, left, nh, nh, nh) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -373,7 +374,7 @@ and left_red
   )
 
 and right_green
-: type a. a m -> (a, a, [`green], right, nh, nh, nh) triple m
+: type a. a m -> (a, a, is_green, right, nh, nh, nh) triple m
 = fun e ->
   Nest
   (fun () ->
@@ -390,7 +391,7 @@ and right_green
   )
 
 and right_red
-: type a. a m -> (a, a, [`red], right, nh, nh, nh) triple m
+: type a. a m -> (a, a, is_red, right, nh, nh, nh) triple m
 = fun e ->
   Nest
   (fun () ->

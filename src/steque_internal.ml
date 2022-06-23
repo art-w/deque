@@ -1,18 +1,17 @@
 module Deque = Dequeue_internal
 type 'a suffix = 'a Deque.t
 
-type (_, _) prefix =
-  | P2 : 'a * 'a                       -> ('a, [`red]) prefix
-  | P3 : 'a * 'a * 'a                  -> ('a, [`yellow]) prefix
-  | P4 : 'a * 'a * 'a * 'a * 'a suffix -> ('a, [`green]) prefix
+open Deque.ColorsGYRO
 
-type is_kont = IS_KONT
-type is_not_kont = IS_NOT_KONT
+type (_, _) prefix =
+  | P2 : 'a * 'a                       -> ('a, is_red) prefix
+  | P3 : 'a * 'a * 'a                  -> ('a, is_yellow) prefix
+  | P4 : 'a * 'a * 'a * 'a * 'a suffix -> ('a, is_green) prefix
 
 type (_, _, _, _) steque =
-  | KONT   : ('a, 'a, [`yellow], is_kont) steque
+  | KONT   : ('a, 'a, is_yellow, is_kont) steque
   | Triple : ('a, 'c) prefix
-           * ('a pair, 'b, [`yellow], _) steque
+           * ('a pair, 'b, is_yellow, _) steque
            * 'a suffix
           -> ('a, 'b, 'c, is_not_kont) steque
 
@@ -20,21 +19,21 @@ and 'a pair =
   Pair : ('a, _) prefix * ('a pair, _) kont -> 'a pair
 
 and (_, _) kont =
-  | Suffix : 'a Deque.t -> ('a, [`green]) kont
-  | R  : ('a, 'b, [`red], is_not_kont) steque
-       * ('b, [`green]) kont
-      -> ('a, [`red]) kont
-  | Y  : ('a, 'b, [`yellow], is_not_kont) steque
-       * ('b, [`green]) kont
-      -> ('a, [`yellow]) kont
-  | G  : ('a, 'b, [`green ], is_not_kont) steque
-       * ('b, [< `green | `red]) kont
-      -> ('a, [`green]) kont
-  | Yr : ('a, 'b, [`yellow], is_not_kont) steque
-       * ('b, [`red]) kont
-      -> ('a, [`orange]) kont
+  | Suffix : 'a Deque.t -> ('a, is_green) kont
+  | R  : ('a, 'b, is_red, is_not_kont) steque
+       * ('b, is_green) kont
+      -> ('a, is_red) kont
+  | Y  : ('a, 'b, is_yellow, is_not_kont) steque
+       * ('b, is_green) kont
+      -> ('a, is_yellow) kont
+  | G  : ('a, 'b, is_green, is_not_kont) steque
+       * ('b, (_ * notyellow * _) * notorange) kont
+      -> ('a, is_green) kont
+  | Yr : ('a, 'b, is_yellow, is_not_kont) steque
+       * ('b, is_red) kont
+      -> ('a, is_orange) kont
 
-and _ t = T : ('a, [< `yellow | `green ]) kont -> 'a t
+and _ t = T : ('a, (_ * _ * notred) * notorange) kont -> 'a t
 
 type _ any_kont = Any_kont : ('a, _) kont -> 'a any_kont
 
@@ -48,7 +47,7 @@ let is_empty = function
 
 let green
 : type a c.
-  (a, [`green]) prefix -> (a pair, c) kont -> a suffix -> (a, [`green]) kont
+  (a, is_green) prefix -> (a pair, c) kont -> a suffix -> (a, is_green) kont
 = fun p kont s ->
   match kont with
   | Suffix small -> G (Triple (p, KONT, s), Suffix small)
@@ -59,7 +58,7 @@ let green
 
 let yellow
 : type a.
-  (a, [`yellow]) prefix -> (a pair) t -> a suffix -> (a, [`yellow]) kont
+  (a, is_yellow) prefix -> (a pair) t -> a suffix -> (a, is_yellow) kont
 = fun p (T kont) s ->
   match kont with
   | Y (child, k)    -> Y (Triple (p, child, s), k)
@@ -67,7 +66,7 @@ let yellow
   | G (g, k)        -> Y (Triple (p, KONT,  s), G (g, k))
 
 let orange
-: type a. (a, [`yellow]) prefix -> (a pair) any_kont -> a suffix -> a any_kont
+: type a. (a, is_yellow) prefix -> (a pair) any_kont -> a suffix -> a any_kont
 = fun p (Any_kont kont) s ->
   match kont with
   | Y  (child, k)   -> Any_kont (Y  (Triple (p, child, s), k))
@@ -77,7 +76,7 @@ let orange
   | (R _)      as k -> Any_kont (Yr (Triple (p, KONT, s), k))
 
 let red
-: type a. (a, [`red]) prefix -> (a pair) t -> a suffix -> (a, [`red]) kont
+: type a. (a, is_red) prefix -> (a pair) t -> a suffix -> (a, is_red) kont
 = fun p (T kont) s ->
   match kont with
   | Y (child, k)    -> R (Triple (p, child, s), k)
@@ -85,21 +84,21 @@ let red
   | G (g, k)        -> R (Triple (p, KONT,  s), G (g, k))
 
 let green_prefix_cons
-: type a. a -> (a, [`green]) prefix -> (a, [`green]) prefix
+: type a. a -> (a, is_green) prefix -> (a, is_green) prefix
 = fun x -> function
   | P4 (a, b, c, d, deq) -> P4 (x, a, b, c, Deque.cons d deq)
 
 let red_prefix_cons
-: type a. a -> (a, [`red]) prefix -> (a, [`yellow]) prefix
+: type a. a -> (a, is_red) prefix -> (a, is_yellow) prefix
 = fun x -> function
   | P2 (a, b) -> P3 (x, a, b)
 
 let yellow_prefix_cons
-: type a. a -> (a, [`yellow]) prefix -> (a, [`green]) prefix
+: type a. a -> (a, is_yellow) prefix -> (a, is_green) prefix
 = fun x -> function
   | P3 (a, b, c) -> P4 (x, a, b, c, Deque.empty)
 
-type _ yg_prefix = Any : ('a, [< `yellow | `green]) prefix -> 'a yg_prefix
+type _ yg_prefix = Any : ('a, (_ * _ * notred) * notorange) prefix -> 'a yg_prefix
 
 let prefix_cons
 : type a c. a -> (a, c) prefix -> a yg_prefix
@@ -295,11 +294,11 @@ let join_t
       let yp = Pair (y_prefix, y_kont) in
       snoc child yp, y_suffix
 
-type _ green_or_red = Green_or_red : [< `green | `red] green_or_red
+type _ green_or_red = Green_or_red : ((_ * notyellow * _) * notorange) green_or_red
 
 let split_kont
 : type a b c k.
-  c green_or_red -> (a, b, [`yellow], k) steque -> (b, c) kont -> a any_kont
+  c green_or_red -> (a, b, is_yellow, k) steque -> (b, c) kont -> a any_kont
 = fun green_or_red steque kont ->
   match steque with
   | KONT -> Any_kont kont
@@ -312,7 +311,7 @@ let split_kont
       end
 
 let split_green
-: type a b k. (a, b, [`yellow], k) steque -> (b, [`green]) kont -> a t
+: type a b k. (a, b, is_yellow, k) steque -> (b, is_green) kont -> a t
 = fun steque kont ->
   match steque with
   | KONT -> T kont
@@ -323,7 +322,7 @@ let split_green
       end
 
 let split_red
-: type a b k. (a, b, [`yellow], k) steque -> (b, [`red]) kont -> a any_kont
+: type a b k. (a, b, is_yellow, k) steque -> (b, is_red) kont -> a any_kont
 = fun steque kont ->
   match steque with
   | KONT -> Any_kont kont
@@ -449,7 +448,7 @@ let concat
 
 
 let green_pop
-: type a. (a, [`green]) prefix -> a * a yg_prefix
+: type a. (a, is_green) prefix -> a * a yg_prefix
 = function
   | P4 (a, b, c, d, deq) ->
       match Deque.uncons deq with
@@ -457,11 +456,11 @@ let green_pop
       | Some (e, deq) -> a, Any (P4 (b, c, d, e, deq))
 
 let yellow_pop
-: type a. (a, [`yellow]) prefix -> a * (a, [`red]) prefix
+: type a. (a, is_yellow) prefix -> a * (a, is_red) prefix
 = function P3 (a, b, c) -> a, P2 (b, c)
 
 let green_of_red
-: type a. (a, [`red]) kont -> (a, [`green]) kont
+: type a. (a, is_red) kont -> (a, is_green) kont
 = function
   | R (Triple (P2 (a, b), KONT, s), Suffix small) ->
     begin match Deque.uncons small with
@@ -512,10 +511,10 @@ let green_of_red
       let Any_kont child = concat_kont r child in
       green p child s
 
-type _ not_yellow = Not_yellow : [< `red | `green ] not_yellow
+type _ not_yellow = Not_yellow : ((_ * notyellow * _) * notorange) not_yellow
 
 let make_green
-: type a c. c not_yellow -> (a, c) kont -> (a, [`green]) kont
+: type a c. c not_yellow -> (a, c) kont -> (a, is_green) kont
 = fun not_yellow kont ->
   match not_yellow, kont with
   | _, Suffix s -> Suffix s

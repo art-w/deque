@@ -1,58 +1,87 @@
+module ColorsGYR = struct
+  type green = Green
+  type notgreen = Notgreen
+  type yellow = Yellow
+  type notyellow = Notyellow
+  type red = Red
+  type notred = Notred
+
+  type is_green = green * notyellow * notred
+  type is_yellow = notgreen * yellow * notred
+  type is_red = notgreen * notyellow * red
+
+  type is_kont = Kont
+  type is_not_kont = Notkont
+end
+
+module ColorsGYRO = struct
+  include ColorsGYR
+  type orange = Orange
+  type notorange = Notorange
+
+  type nonrec is_green = is_green * notorange
+  type nonrec is_yellow = is_yellow * notorange
+  type nonrec is_red = is_red * notorange
+  type is_orange = (notgreen * notyellow * notred) * orange
+end
+
+open ColorsGYR
+
 type ('a, 'color) buffer =
-  | B0 :                           ('a, [`red   ]) buffer
-  | B1 : 'a                     -> ('a, [`yellow]) buffer
-  | B2 : 'a * 'a                -> ('a, [< `green | `yellow]) buffer
-  | B3 : 'a * 'a * 'a           -> ('a, [< `green | `yellow]) buffer
-  | B4 : 'a * 'a * 'a * 'a      -> ('a, [`yellow]) buffer
-  | B5 : 'a * 'a * 'a * 'a * 'a -> ('a, [`red   ]) buffer
+  | B0 :                           ('a, is_red) buffer
+  | B1 : 'a                     -> ('a, is_yellow) buffer
+  | B2 : 'a * 'a                -> ('a, _ * _ * notred) buffer
+  | B3 : 'a * 'a * 'a           -> ('a, _ * _ * notred) buffer
+  | B4 : 'a * 'a * 'a * 'a      -> ('a, is_yellow) buffer
+  | B5 : 'a * 'a * 'a * 'a * 'a -> ('a, is_red) buffer
 
 type 'a yellow_buffer =
-  Yellowish : ('a, [< `green | `yellow]) buffer -> 'a yellow_buffer
+  Yellowish : ('a, _ * _ * notred) buffer -> 'a yellow_buffer
 
 type 'a any_buffer =
-  Any : ('a, [< `green | `yellow | `red ]) buffer -> 'a any_buffer
+  Any : ('a, _) buffer -> 'a any_buffer
 
-type ('a, 'b, 'color) deque =
-  | HOLE : ('a, 'a, [`kont]) deque
+type ('a, 'b, 'color, 'kont) deque =
+  | HOLE : ('a, 'a, (notgreen * notyellow * notred), is_kont) deque
 
-  | Yellow : ('a, [< `green | `yellow]) buffer
-           * ('a * 'a, 'b, [< `yellow | `kont]) deque
-           * ('a, [< `green | `yellow]) buffer
-          -> ('a, 'b, [`yellow]) deque
+  | Yellow : ('a, (_ * _ * notred)) buffer
+           * ('a * 'a, 'b, (notgreen * _ * notred), _) deque
+           * ('a, (_ * _ * notred)) buffer
+          -> ('a, 'b, is_yellow, is_not_kont) deque
 
-  | Green : ('a, [`green]) buffer
-          * ('a * 'a, 'b, [< `yellow | `kont]) deque
-          * ('a, [`green]) buffer
-         -> ('a, 'b, [`green]) deque
+  | Green : ('a, is_green) buffer
+          * ('a * 'a, 'b, (notgreen * _ * notred), _) deque
+          * ('a, is_green) buffer
+         -> ('a, 'b, is_green, is_not_kont) deque
 
-  | Red : ('a, [< `green | `yellow | `red]) buffer
-        * ('a * 'a, 'b, [< `yellow | `kont]) deque
-        * ('a, [< `green | `yellow | `red]) buffer
-       -> ('a, 'b, [`red]) deque
+  | Red : ('a, _) buffer
+        * ('a * 'a, 'b, (notgreen * _ * notred), _) deque
+        * ('a, _) buffer
+       -> ('a, 'b, is_red, is_not_kont) deque
 
 type ('a, 'color) kont =
-  | Small : ('a, _) buffer -> ('a, [`green]) kont
-  | G : ('a, 'b, [`green ]) deque
-      * ('b, [< `green | `red]) kont
-     -> ('a, [`green ]) kont
-  | Y : ('a, 'b, [`yellow]) deque
-      * ('b, [`green]) kont
-     -> ('a, [`yellow]) kont
-  | R : ('a, 'b, [`red]) deque
-      * ('b, [`green]) kont
-     -> ('a, [`red]) kont
+  | Small : ('a, _) buffer -> ('a, is_green) kont
+  | G : ('a, 'b, is_green, is_not_kont) deque
+      * ('b, _ * notyellow * _) kont
+     -> ('a, is_green) kont
+  | Y : ('a, 'b, is_yellow, is_not_kont) deque
+      * ('b, is_green) kont
+     -> ('a, is_yellow) kont
+  | R : ('a, 'b, is_red, is_not_kont) deque
+      * ('b, is_green) kont
+     -> ('a, is_red) kont
 
-type 'a s = T : ('a, [< `green | `yellow]) kont -> 'a s
+type 'a s = T : ('a, _ * _ * notred) kont -> 'a s
 
 let green_prefix_cons
-: type a. a -> (a, [`green]) buffer -> (a, [`yellow]) buffer
+: type a. a -> (a, is_green) buffer -> (a, is_yellow) buffer
 = fun x buf ->
   match buf with
   | B2 (a, b) -> B3 (x, a, b)
   | B3 (a, b, c) -> B4 (x, a, b, c)
 
 let green_suffix_snoc
-: type a. (a, [`green]) buffer -> a -> (a, [`yellow]) buffer
+: type a. (a, is_green) buffer -> a -> (a, is_yellow) buffer
 = fun buf x ->
   match buf with
   | B2 (a, b)    -> B3 (a, b, x)
@@ -74,7 +103,7 @@ let yellow_suffix_snoc : type a. a yellow_buffer -> a -> a any_buffer
   | B3 (a, b, c) -> Any (B4 (a, b, c, x))
   | B4 (a, b, c, d) -> Any (B5 (a, b, c, d, x))
 
-let buffer_cons : type a c. a -> (a, c) buffer -> (a, [`green]) kont
+let buffer_cons : type a c. a -> (a, c) buffer -> (a, is_green) kont
 = fun x buf ->
   match buf with
   | B0 -> Small (B1 x)
@@ -85,7 +114,7 @@ let buffer_cons : type a c. a -> (a, c) buffer -> (a, [`green]) kont
   | B5 (a, b, c, d, e) ->
       G (Green (B3 (x, a, b), HOLE, B3 (c, d, e)), Small B0)
 
-let buffer_snoc : type a c. (a, c) buffer -> a -> (a, [`green]) kont
+let buffer_snoc : type a c. (a, c) buffer -> a -> (a, is_green) kont
 = fun buf x ->
   match buf with
   | B0 -> Small (B1 x)
@@ -97,12 +126,12 @@ let buffer_snoc : type a c. (a, c) buffer -> a -> (a, [`green]) kont
       G (Green (B3 (a, b, c), HOLE, B3 (d, e, x)), Small B0)
 
 
-let green_uncons : type a. (a, [`green]) buffer -> a * a yellow_buffer
+let green_uncons : type a. (a, is_green) buffer -> a * a yellow_buffer
 = function
   | B2 (a, b)    -> a, Yellowish (B1 b)
   | B3 (a, b, c) -> a, Yellowish (B2 (b, c))
 
-let green_unsnoc : type a. (a, [`green]) buffer -> a yellow_buffer * a
+let green_unsnoc : type a. (a, is_green) buffer -> a yellow_buffer * a
 = function
   | B2 (a, b)    -> Yellowish (B1 a), b
   | B3 (a, b, c) -> Yellowish (B2 (a, b)), c
@@ -172,8 +201,8 @@ let suffix_rot : type a c. (a, c) buffer -> a -> a * (a, c) buffer
 
 type 'a decompose =
   | Underflow : 'a option -> 'a decompose
-  | Ok        : ('a, [`green]) buffer -> 'a decompose
-  | Overflow  : ('a, [`green]) buffer * ('a * 'a) -> 'a decompose
+  | Ok        : ('a, is_green) buffer -> 'a decompose
+  | Overflow  : ('a, is_green) buffer * ('a * 'a) -> 'a decompose
 
 let prefix_decompose : type a c. (a, c) buffer -> a decompose
 = function
@@ -208,8 +237,8 @@ let prefix12 x opt = match opt with
 let green_prefix_concat
 : type a c.
      (a, c) buffer
-  -> (a * a, [`green]) buffer
-  -> (a, [`green]) buffer * (a * a) yellow_buffer
+  -> (a * a, is_green) buffer
+  -> (a, is_green) buffer * (a * a) yellow_buffer
 = fun buf1 buf2 ->
   match prefix_decompose buf1 with
   | Ok buf1 -> buf1, Yellowish buf2
@@ -221,9 +250,9 @@ let green_prefix_concat
 
 let green_suffix_concat
 : type a c.
-     (a * a, [`green]) buffer
+     (a * a, is_green) buffer
   -> (a, c) buffer
-  -> (a * a) yellow_buffer * (a, [`green]) buffer
+  -> (a * a) yellow_buffer * (a, is_green) buffer
 = fun buf1 buf2 ->
   match suffix_decompose buf2 with
   | Ok buf2 -> Yellowish buf1, buf2
@@ -338,7 +367,7 @@ let make_small
       G (Green (p1, Yellow (prefix12 ab x, HOLE, B1 cd), s1), Small rest)
 
 let green_of_red
-: type a. (a, [`red]) kont -> (a, [`green]) kont
+: type a. (a, is_red) kont -> (a, is_green) kont
 = function
   | R (Red (p1, HOLE, s1), Small buf) ->
       make_small p1 buf s1
@@ -351,10 +380,10 @@ let green_of_red
       let Yellowish s2, s1 = green_suffix_concat s2 s1 in
       G (Green (p1, Yellow (p2, child, s2), s1), kont)
 
-type _ not_yellow = Not_yellow: [< `green | `red] not_yellow
+type _ not_yellow = Not_yellow: (_ * notyellow * _) not_yellow
 
 let ensure_green
-: type a c. c not_yellow -> (a, c) kont -> (a, [`green]) kont
+: type a c. c not_yellow -> (a, c) kont -> (a, is_green) kont
 = fun Not_yellow t ->
   match t with
   | Small buf -> Small buf
