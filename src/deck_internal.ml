@@ -68,7 +68,7 @@ let vector_fold_left
   | V5 (a, b, c, d, e) -> fn (fn (fn (fn (fn z a) b) c) d) e
   | V6 (a, b, c, d, e, f) -> fn (fn (fn (fn (fn (fn z a) b) c) d) e) f
 
-module Buffer : sig
+module type BUFFER = sig
   type ('a, 'n) t
 
   val empty : ('a, z) t
@@ -105,45 +105,49 @@ module Buffer : sig
     | Lte1 : ('a, _ ge1) t -> 'a has1
   val has1 : ('a, 'n) t -> 'a has1
 
-  val to_dequeue : ('a, _) t -> 'a Deq.t
+  val to_dequeue : ('a, 's) t -> 'a Deq.t
   val of_dequeue : 'a Deq.t -> 'a has1
 
   type 'a has5 =
     | Exact_4 : 'a four -> 'a has5
     | At_least_5 : ('a, _ ge5) t -> 'a has5
-  val has5   : ('a, _ ge4) t -> 'a has5
+  val has5 : ('a, 's ge4) t -> 'a has5
 
   type 'a has5p2 =
     | Less_than_5p2 : ('a, eq6) vector -> 'a has5p2
     | At_least_5p2 : ('a, _ ge5) t * 'a * 'a -> 'a has5p2
-  val has5p2 : ('a, _ ge1) t -> 'a has5p2
+  val has5p2 : ('a, 's ge1) t -> 'a has5p2
 
   type 'a has2p5 =
     | Less_than_2p5 : ('a, eq6) vector -> 'a has2p5
     | At_least_2p5 : 'a * 'a * ('a, _ ge5) t -> 'a has2p5
-  val has2p5 : ('a, _ ge1) t -> 'a has2p5
+  val has2p5 : ('a, 's ge1) t -> 'a has2p5
 
   type 'a has8 =
     | Less_than_8 : ('a five * ('a, eq2) vector) -> 'a has8
     | At_least_8 : ('a, _ ge8) t -> 'a has8
-  val has8   : ('a, _ ge5) t -> 'a has8
+  val has8 : ('a, 's ge5) t -> 'a has8
 
   type 'a has3p8 =
     | Less_than_11 : 'a eight * ('a, eq2) vector -> 'a has3p8
     | At_least_11 : 'a * 'a * 'a * ('a, _ ge8) t -> 'a has3p8
-  val has3p8 : ('a, _ ge8) t -> 'a has3p8
+  val has3p8 : ('a, 's ge8) t -> 'a has3p8
+end
 
-end = struct
+module Buffer : BUFFER = struct
   type ('a, 'quantity) t = 'a Deq.t
 
   let empty = Deq.empty
   let cons x t = Deq.cons x t
   let snoc t x = Deq.snoc t x
 
-  let uncons t = match Deq.uncons t with
+  let uncons : ('a, 'n s) t -> 'a * ('a, 'n) t
+  = fun t -> match Deq.uncons t with
     | None -> assert false
     | Some (x, t') -> (x, t')
-  let unsnoc t = match Deq.unsnoc t with
+
+  let unsnoc : ('a, 'n s) t -> ('a, 'n) t * 'a
+  = fun t -> match Deq.unsnoc t with
     | None -> assert false
     | Some (t', x) -> (t', x)
 
@@ -151,17 +155,20 @@ end = struct
   let pair x y = cons x (single y)
   let triple x y z = cons x (pair y z)
 
-  let uncons2 t =
+  let uncons2 : ('a, 'n s s) t -> 'a * 'a * ('a, 'n) t
+  = fun t ->
     let x, t = uncons t in
     let y, t = uncons t in
     x, y, t
 
-  let unsnoc2 t =
+  let unsnoc2 : ('a, 'n s s) t -> ('a, 'n) t * 'a * 'a
+  = fun t ->
     let t, x = unsnoc t in
     let t, y = unsnoc t in
     t, y, x
 
-  let two t =
+  let two : ('a, eq2) t -> 'a * 'a
+  = fun t ->
     let x, y, t = uncons2 t in
     assert (Deq.is_empty t) ;
     (x, y)
@@ -208,13 +215,16 @@ end = struct
     | Less_than_8 : ('a five * ('a, eq2) vector) -> 'a has8
     | At_least_8 : ('a, _ ge8) t -> 'a has8
 
-  let uncons5 t =
+  let uncons5
+  : ('a, 'n s s s s s) t -> ('a * 'a * 'a * 'a * 'a) * ('a, 'n) t
+  = fun t ->
     let a, b, t = uncons2 t in
     let c, d, t = uncons2 t in
     let e, t = uncons t in
     (a, b, c, d, e), t
 
-  let has8 buffer =
+  let has8 : ('a, 's ge5) t -> 'a has8
+  = fun buffer ->
     let five, t = uncons5 buffer in
     match uncons3 t with
     | Not_enough vec -> Less_than_8 (five, vec)
@@ -224,7 +234,8 @@ end = struct
     | Exact_4 : 'a four -> 'a has5
     | At_least_5 : ('a, _ ge5) t -> 'a has5
 
-  let has5 buffer =
+  let has5 : ('a, 's ge4) t -> 'a has5
+  = fun buffer ->
     let a, b, t = uncons2 buffer in
     let c, d, t = uncons2 t in
     match has1 t with
@@ -238,7 +249,8 @@ end = struct
     | Less_than_5p2 : ('a, eq6) vector -> 'a has5p2
     | At_least_5p2 : ('a, _ ge5) t * 'a * 'a -> 'a has5p2
 
-  let has5p2 t =
+  let has5p2 : ('a, 's ge1) t -> 'a has5p2
+  = fun t ->
       let t, a = unsnoc t in
       match Deq.unsnoc t with
       | None -> Less_than_5p2 (V1 a)
@@ -263,7 +275,8 @@ end = struct
     | Less_than_2p5 : ('a, eq6) vector -> 'a has2p5
     | At_least_2p5 : 'a * 'a * ('a, _ ge5) t -> 'a has2p5
 
-  let has2p5 t =
+  let has2p5 : ('a, 's ge1) t -> 'a has2p5
+  = fun t ->
       let a, t = uncons t in
       match Deq.uncons t with
       | None -> Less_than_2p5 (V1 a)
@@ -288,7 +301,8 @@ end = struct
     | Less_than_11 : 'a eight * ('a, eq2) vector -> 'a has3p8
     | At_least_11 : 'a * 'a * 'a * ('a, _ ge8) t -> 'a has3p8
 
-  let has3p8 t =
+  let has3p8 : ('a, 's ge8) t -> 'a has3p8
+  = fun t ->
     let a, b, t = uncons2 t in
     let c, (t as t8) = uncons t in
     let d, e, t = uncons2 t in
@@ -739,8 +753,8 @@ let snoc_child
 type 'a buffer_12 = 'a * ('a, eq1) vector
 
 let stored_left
-: type a c.
-     (a, _ ge5) prefix
+: type a c s.
+     (a, s ge5) prefix
   -> (a stored_triple, c) st
   -> (a, eq2) suffix
   -> a buffer_12
@@ -750,17 +764,16 @@ let stored_left
     let a, v1 = s1 in
     Buffer.snoc_vector (Buffer.snoc s2 a) v1
   in
-  let x, p2 = Buffer.uncons p2 in
-  let y, p2 = Buffer.uncons p2 in
+  let x, y, p2 = Buffer.uncons2 p2 in
   let s3 = Buffer.pair x y in
   s3, Stored (p2, d2, s2)
 
 let stored_right
-: type a any_c.
+: type a any_c s.
      a buffer_12
   -> (a, eq2) prefix
   -> (a stored_triple, any_c) st
-  -> (a, _ ge5) suffix
+  -> (a, s ge5) suffix
   -> a stored_triple * (a, eq2) suffix
 = fun s1 p2 d2 s2 ->
   let p2 =
@@ -1171,7 +1184,7 @@ let unsnoc_green
 type _ unstored =
   Unstored : ('a, _ ge3) prefix * 'a stored_triple semi -> 'a unstored
 
-let uncons_stored
+let uncons_stored : ('a stored_triple, is_green) deque -> 'a unstored
 = fun d1 ->
     let stored, d1 = uncons_green d1 in
     match stored with
@@ -1182,7 +1195,7 @@ let uncons_stored
         let d1 = concat_semi (S d2) d1 in
         Unstored (p2, d1)
 
-let unsnoc_stored
+let unsnoc_stored : ('a stored_triple, is_green) deque -> 'a unstored
 = fun d1 ->
     let d1, stored = unsnoc_green d1 in
     match stored with
@@ -1253,7 +1266,7 @@ type _ unstored_sandwich =
                       * ('a, _ ge3) suffix
                      -> 'a unstored_sandwich
 
-let unsandwich_stored
+let unsandwich_stored : ('a stored_triple, is_green) deque -> 'a unstored_sandwich
 = fun d1 ->
   match unsandwich_green d1 with
   | Alone (Stored_prefix x) -> Unstored_alone x
@@ -1276,9 +1289,9 @@ let unsandwich_stored
         Unstored_sandwich (p2, d1, s3)
 
 let only_small
-: type a.
-     (a, _ ge8) prefix
-  -> (a, _ ge8) suffix
+: type a s_ s__.
+     (a, s_  ge8) prefix
+  -> (a, s__ ge8) suffix
   -> (a, a, is_green, only, nh, nh, nh) triple
 = fun p2 s2 ->
   match Buffer.has3p8 s2 with
