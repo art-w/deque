@@ -152,33 +152,23 @@ let yellow_unsnoc : type a. a yellow_buffer -> a any_buffer * a
   | B3 (a, b, c)    -> Any (B2 (a, b)),    c
   | B4 (a, b, c, d) -> Any (B3 (a, b, c)), d
 
-let buffer_uncons_unsafe : type a c. (a, c) buffer -> a * a any_buffer
-= function
-  | B0 -> assert false
-  | (B1 _) as buf -> yellow_uncons (Yellowish buf)
-  | (B2 _) as buf -> yellow_uncons (Yellowish buf)
-  | (B3 _) as buf -> yellow_uncons (Yellowish buf)
-  | (B4 _) as buf -> yellow_uncons (Yellowish buf)
-  | B5 (a, b, c, d, e) -> a, Any (B4 (b, c, d, e))
-
-let buffer_unsnoc_unsafe : type a c. (a, c) buffer -> a any_buffer * a
-= function
-  | B0 -> assert false
-  | (B1 _) as buf -> yellow_unsnoc (Yellowish buf)
-  | (B2 _) as buf -> yellow_unsnoc (Yellowish buf)
-  | (B3 _) as buf -> yellow_unsnoc (Yellowish buf)
-  | (B4 _) as buf -> yellow_unsnoc (Yellowish buf)
-  | B5 (a, b, c, d, e) -> Any (B4 (a, b, c, d)), e
-
 let buffer_uncons : type a c. (a, c) buffer -> (a * a any_buffer) option
 = function
   | B0  -> None
-  | buf -> Some (buffer_uncons_unsafe buf)
+  | (B1 _) as buf -> Some (yellow_uncons (Yellowish buf))
+  | (B2 _) as buf -> Some (yellow_uncons (Yellowish buf))
+  | (B3 _) as buf -> Some (yellow_uncons (Yellowish buf))
+  | (B4 _) as buf -> Some (yellow_uncons (Yellowish buf))
+  | B5 (a, b, c, d, e) -> Some (a, Any (B4 (b, c, d, e)))
 
 let buffer_unsnoc : type a c. (a, c) buffer -> (a any_buffer * a) option
 = function
   | B0  -> None
-  | buf -> Some (buffer_unsnoc_unsafe buf)
+  | (B1 _) as buf -> Some (yellow_unsnoc (Yellowish buf))
+  | (B2 _) as buf -> Some (yellow_unsnoc (Yellowish buf))
+  | (B3 _) as buf -> Some (yellow_unsnoc (Yellowish buf))
+  | (B4 _) as buf -> Some (yellow_unsnoc (Yellowish buf))
+  | B5 (a, b, c, d, e) -> Some (Any (B4 (a, b, c, d)), e)
 
 let prefix_rot : type a c. a -> (a, c) buffer -> (a, c) buffer * a
 = fun x buf -> match buf with
@@ -262,7 +252,9 @@ let green_suffix_concat
   | Overflow (buf2, ab) ->
       Yellowish (green_suffix_snoc buf1 ab), buf2
 
-let prefix_concat buf1 buf2 =
+let prefix_concat
+: ('a, 'b) buffer -> ('a * 'a) yellow_buffer -> ('a, is_green) buffer * ('a * 'a) any_buffer
+= fun buf1 buf2 ->
   match prefix_decompose buf1 with
   | Ok buf1 ->
       let Yellowish buf2 = buf2 in
@@ -273,7 +265,9 @@ let prefix_concat buf1 buf2 =
   | Overflow (buf1, ab) ->
       buf1, yellow_prefix_cons ab buf2
 
-let suffix_concat buf1 buf2 =
+let suffix_concat
+: ('a * 'a) yellow_buffer -> ('a, 'b) buffer -> ('a * 'a) any_buffer * ('a, is_green) buffer
+= fun buf1 buf2 ->
   match suffix_decompose buf2 with
   | Ok buf2 ->
       let Yellowish buf1 = buf1 in
@@ -308,6 +302,7 @@ let buffer_halve : type a c. (a, c) buffer -> a option * (a * a) any_buffer
   | B5 (a, b, c, d, e) -> Some a, Any (B2 ((b, c), (d, e)))
 
 let make_small
+: ('a, 'b) buffer -> ('a * 'a, 'c) buffer -> ('a, 'd) buffer -> ('a, is_green) kont
 = fun prefix1 buf suffix1 ->
   match prefix_decompose prefix1, suffix_decompose suffix1 with
   | Ok p1, Ok s1 ->
@@ -396,7 +391,7 @@ let yellow p1 child s1 kont =
 let red p1 child s1 kont =
   T (green_of_red (R (Red (p1, child, s1), kont)))
 
-let cons x (T t) = match t with
+let cons x (T t) : 'a s = match t with
   | Small buf -> T (buffer_cons x buf)
   | G (Green (p1, child, s1), kont) ->
       let p1 = green_prefix_cons x p1 in
@@ -405,7 +400,7 @@ let cons x (T t) = match t with
       let Any p1 = yellow_prefix_cons x (Yellowish p1) in
       red p1 child s1 kont
 
-let snoc (T t) x = match t with
+let snoc (T t) x : 'a s = match t with
   | Small buf -> T (buffer_snoc buf x)
   | G (Green (p1, child, s1), kont) ->
       let s1 = green_suffix_snoc s1 x in
@@ -416,25 +411,29 @@ let snoc (T t) x = match t with
 
 let uncons_unsafe (T t) = match t with
   | Small buf ->
-      let x, Any buf = buffer_uncons_unsafe buf in
-      x, T (Small buf)
+      begin match buffer_uncons buf with
+      | None -> None
+      | Some (x, Any buf) -> Some (x, T (Small buf))
+      end
   | G (Green (p1, child, s1), kont) ->
       let x, Yellowish p1 = green_uncons p1 in
-      x, yellow p1 child s1 kont
+      Some (x, yellow p1 child s1 kont)
   | Y (Yellow (p1, child, s1), kont) ->
       let x, Any p1 = yellow_uncons (Yellowish p1) in
-      x, red p1 child s1 kont
+      Some (x, red p1 child s1 kont)
 
 let unsnoc_unsafe (T t) = match t with
   | Small buf ->
-      let Any buf, x = buffer_unsnoc_unsafe buf in
-      T (Small buf), x
+      begin match buffer_unsnoc buf with
+      | None -> None
+      | Some (Any buf, x) -> Some (T (Small buf), x)
+      end
   | G (Green (p1, child, s1), kont) ->
       let Yellowish s1, x = green_unsnoc s1 in
-      yellow p1 child s1 kont, x
+      Some (yellow p1 child s1 kont, x)
   | Y (Yellow (p1, child, s1), kont) ->
       let Any s1, x = yellow_unsnoc (Yellowish s1) in
-      red p1 child s1 kont, x
+      Some (red p1 child s1 kont, x)
 
 
 type 'a t = { length : int ; s : 'a s }
@@ -461,20 +460,28 @@ let uncons { length = n ; s } =
   match n with
   | 0 -> None
   | _ when n >= 0 ->
-    let x, s = uncons_unsafe s in
-    Some (x, { length = n - 1 ; s })
+    begin match uncons_unsafe s with
+      | None -> None (* ?? *)
+      | Some (x, s) -> Some (x, { length = n - 1 ; s })
+    end
   | _ ->
-    let s, x = unsnoc_unsafe s in
-    Some (x, { length = n + 1 ; s })
+    begin match unsnoc_unsafe s with
+      | None -> None (* ?? *)
+      | Some (s, x) -> Some (x, { length = n + 1 ; s })
+    end
 
 let unsnoc { length = n ; s } =
   match n with
   | 0 -> None
   | _ when n >= 0 ->
-      let s, x = unsnoc_unsafe s in
-      Some ({ length = n - 1 ; s }, x)
+    begin match unsnoc_unsafe s with
+      | None -> None (* ?? *)
+      | Some (s, x) -> Some ({ length = n - 1 ; s }, x)
+    end
   | _ ->
-      let x, s = uncons_unsafe s in
-      Some ({ length = n + 1 ; s }, x)
+    begin match uncons_unsafe s with
+      | None -> None (* ?? *)
+      | Some (x, s) -> Some ({ length = n + 1 ; s }, x)
+    end
 
 let is_rev t = t.length < 0
