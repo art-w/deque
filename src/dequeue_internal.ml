@@ -1,4 +1,4 @@
-module ColorsGYR = struct
+module Colors = struct
   type green = Green
   type notgreen = Notgreen
   type yellow = Yellow
@@ -6,22 +6,26 @@ module ColorsGYR = struct
   type red = Red
   type notred = Notred
 
-  type is_green = green * notyellow * notred
-  type is_yellow = notgreen * yellow * notred
-  type is_red = notgreen * notyellow * red
-
   type is_kont = Kont
   type is_not_kont = Notkont
 end
 
+module ColorsGYR = struct
+  include Colors
+
+  type is_green = green * notyellow * notred
+  type is_yellow = notgreen * yellow * notred
+  type is_red = notgreen * notyellow * red
+end
+
 module ColorsGYRO = struct
-  include ColorsGYR
+  include Colors
   type orange = Orange
   type notorange = Notorange
 
-  type nonrec is_green = is_green * notorange
-  type nonrec is_yellow = is_yellow * notorange
-  type nonrec is_red = is_red * notorange
+  type is_green = ColorsGYR.is_green * notorange
+  type is_yellow = ColorsGYR.is_yellow * notorange
+  type is_red = ColorsGYR.is_red * notorange
   type is_orange = (notgreen * notyellow * notred) * orange
 end
 
