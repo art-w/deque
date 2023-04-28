@@ -1,4 +1,4 @@
-#!/usr/bin/gnuplot -persist
+#!/usr/bin/env gnuplot -persist
 
 set title "appending a list with itself"
 set xlabel "length (number of elements)"
