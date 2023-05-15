@@ -424,7 +424,7 @@ and g_deque
   @
   ( g_path_left  e >>= fun (G_path left) ->
     g_path_right e >>= fun (G_path right) ->
-    return (G_deq (Pair_red (left, right)))
+    return (G_deq (Pair_green (left, right)))
   ))
 
 and gr_deque
@@ -434,12 +434,12 @@ and gr_deque
   (fun () ->
   ( gr_path_left  e >>= fun (GR_path left) ->
     gr_path_right e >>= fun (GR_path right) ->
-    return (GR_deq (Pair_green (left, right)))
+    return (GR_deq (Pair_red (left, right)))
   )
   @
   ( g_path_left  e >>= fun (G_path left) ->
     g_path_right e >>= fun (G_path right) ->
-    return (GR_deq (Pair_red (left, right)))
+    return (GR_deq (Pair_green (left, right)))
   )
   @
   ( gr_path_only e >>= fun (GR_path p) ->

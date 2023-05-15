@@ -429,11 +429,11 @@ and ('a, 'color, 'kind) path =
 
 and ('a, 'parent_color) deque =
   | Only_path : ('a, [< `green | `red] as 'c, only) path -> ('a, 'c) deque
-  | Pair_green :
+  | Pair_red :
         ('a, _, left) path
       * ('a, _, right) path
      -> ('a, [`red]) deque
-  | Pair_red :
+  | Pair_green :
         ('a, [`green], left) path
       * ('a, [`green], right) path
      -> ('a, [`green]) deque
@@ -552,18 +552,18 @@ let cons_deque
 = fun x deq ->
   match deq with
   | Only_path p -> Only_path (cons_only_path x p)
+  | Pair_red (prefix, suffix) -> Pair_red (cons_left_path x prefix, suffix)
   | Pair_green (prefix, suffix) -> Pair_green (cons_left_path x prefix, suffix)
-  | Pair_red   (prefix, suffix) -> Pair_red   (cons_left_path x prefix, suffix)
 
 let snoc_deque
 : type a c. (a, c) deque -> a -> (a, c) deque
 = fun deq x ->
   match deq with
   | Only_path p -> Only_path (snoc_only_path p x)
-  | Pair_green (prefix, suffix) ->
-      Pair_green (prefix, snoc_right_path suffix x)
   | Pair_red (prefix, suffix) ->
       Pair_red (prefix, snoc_right_path suffix x)
+  | Pair_green (prefix, suffix) ->
+      Pair_green (prefix, snoc_right_path suffix x)
 
 let single_triple x = Only_prefix (Buffer.single x)
 let only_single x = Only_path (Path (HOLE, single_triple x))
@@ -621,8 +621,8 @@ let color_deque
 : type a c. (a, c) deque -> c green_or_red
 = function
   | Only_path t -> color_path t
-  | Pair_red _ -> Is_green
-  | Pair_green _ -> Is_red
+  | Pair_green _ -> Is_green
+  | Pair_red _ -> Is_red
 
 let color_st
 : type a c. (a, c) st -> c green_or_red
@@ -645,8 +645,8 @@ let pref_left
 : type a c.  (a, c) deque -> a pref_left
 = function
   | Only_path  (Path (d1, k))         -> Pref_left (Only_of d1, k)
+  | Pair_red (Path (le, ft), right) -> Pref_left (Pair_left (le, right), ft)
   | Pair_green (Path (le, ft), right) -> Pref_left (Pair_left (le, right), ft)
-  | Pair_red   (Path (le, ft), right) -> Pref_left (Pair_left (le, right), ft)
 
 let pref_right
 : type a b.
@@ -669,7 +669,7 @@ let no_pref
   | Only_of ri ->
       Only_path (Path (ri, ght))
   | Pair_right (left, ri) ->
-      Pair_red (left, Path (ri, ght))
+      Pair_green (left, Path (ri, ght))
 
 
 let make_child
@@ -682,13 +682,13 @@ let make_child
   | Is_green, Only_of y, g -> S (T (Only_path (Path (y, g))))
   | Is_red,   Only_of y, g -> S (T (Only_path (Path (y, g))))
   | Is_green, Pair_left (le, right), ft ->
-      S (T (Pair_green (Path (le, ft), right)))
+      S (T (Pair_red (Path (le, ft), right)))
   | Is_red, Pair_left (le, right), ft ->
-      S (T (Pair_green (Path (le, ft), right)))
+      S (T (Pair_red (Path (le, ft), right)))
   | Is_green, Pair_right (left, ri), ght ->
-      S (T (Pair_red (left, Path (ri, ght))))
-  | Is_red, Pair_right (left, ri), ght ->
       S (T (Pair_green (left, Path (ri, ght))))
+  | Is_red, Pair_right (left, ri), ght ->
+      S (T (Pair_red (left, Path (ri, ght))))
 
 let cons_child
 : type a b c p hl.
@@ -952,8 +952,8 @@ let make_left
   match color_st st, st with
   | _, Void -> Small V0
   | _, T (Only_path only) -> left_of_only only
-  | Is_green, T (Pair_red (a, b)) -> Ok  (left_of_pair a b)
-  | Is_red, T (Pair_green (a, b)) -> Any (left_of_pair a b)
+  | Is_green, T (Pair_green (a, b)) -> Ok  (left_of_pair a b)
+  | Is_red, T (Pair_red (a, b)) -> Any (left_of_pair a b)
 
 let make_right
 : type a c. (a, c) st -> (a, c, right) path_attempt
@@ -961,8 +961,8 @@ let make_right
   match color_st st, st with
   | _, Void -> Small V0
   | _, T (Only_path only) -> right_of_only only
-  | Is_green, T (Pair_red (a, b)) -> Ok  (right_of_pair a b)
-  | Is_red, T (Pair_green (a, b)) -> Any (right_of_pair a b)
+  | Is_green, T (Pair_green (a, b)) -> Ok  (right_of_pair a b)
+  | Is_red, T (Pair_red (a, b)) -> Any (right_of_pair a b)
 
 let concat_semi
 : type a. a semi -> a semi -> a semi
@@ -972,14 +972,14 @@ let concat_semi
   | Ok left ->
       begin match make_right dr with
       | Small vec -> snoc_semi_vector deq_left vec
-      | Ok  right -> S (T (Pair_green (left, right)))
-      | Any right -> S (T (Pair_green (left, right)))
+      | Ok  right -> S (T (Pair_red (left, right)))
+      | Any right -> S (T (Pair_red (left, right)))
       end
   | Any left ->
       begin match make_right dr with
       | Small vec -> snoc_semi_vector deq_left vec
-      | Ok  right -> S (T (Pair_green (left, right)))
-      | Any right -> S (T (Pair_green (left, right)))
+      | Ok  right -> S (T (Pair_red (left, right)))
+      | Any right -> S (T (Pair_red (left, right)))
       end
 
 let concat
@@ -990,7 +990,7 @@ let concat
   | Ok left ->
       begin match make_right dr with
       | Small vec -> snoc_vector deq_left vec
-      | Ok right -> Regular (T (Pair_red (left, right)))
+      | Ok right -> Regular (T (Pair_green (left, right)))
       | _ -> .
       end
   | _ -> .
@@ -1124,11 +1124,11 @@ let uncons_green
       let d1 = no_pref d1 kont in
       let only = Path (HOLE, Only_red (p1, d1, s1)) in
       x, S (T (Only_path only))
-  | Pair_red (left, right) ->
+  | Pair_green (left, right) ->
       let x, result = uncons_green_left left in
       x, begin match result with
          | Any left ->
-             S (T (Pair_green (left, right)))
+             S (T (Pair_red (left, right)))
          | Exact_6 six ->
              semi_of_right six right
          end
@@ -1158,10 +1158,10 @@ let unsnoc_green
       let d1 = no_pref d1 kont in
       let only = Path (HOLE, Only_red (p1, d1, s1)) in
       S (T (Only_path only)), x
-  | Pair_red (left, right) ->
+  | Pair_green (left, right) ->
       let result, x = unsnoc_green_right right in
       let result = match result with
-         | Any right -> S (T (Pair_green (left, right)))
+         | Any right -> S (T (Pair_red (left, right)))
          | Exact_6 six -> semi_of_left left six
       in
       result, x
@@ -1229,11 +1229,11 @@ let unsandwich_green
       let only = Path (HOLE, Only_red (p1, d1, s1)) in
       Sandwich (x, S (T (Only_path only)), y)
 
-  | Pair_red (left, right) ->
+  | Pair_green (left, right) ->
       let x, left = uncons_green_left left in
       let right, y = unsnoc_green_right right in
       let d1 = match left, right with
-        | Any left, Any right -> S (T (Pair_green (left, right)))
+        | Any left, Any right -> S (T (Pair_red (left, right)))
         | Exact_6 lst, Any right -> semi_of_right lst right
         | Any left, Exact_6 lst  -> semi_of_left left lst
         | Exact_6 left_lst, Exact_6 right_lst ->
@@ -1358,9 +1358,9 @@ let ensure_green_deque
 : type a c. (a, c) deque -> (a, [`green]) deque
 = function
   | Only_path p -> Only_path (ensure_green_path p)
-  | Pair_red (a, b) -> Pair_red (a, b)
-  | Pair_green (a, b) ->
-      Pair_red (ensure_green_path a, ensure_green_path b)
+  | Pair_green (a, b) -> Pair_green (a, b)
+  | Pair_red (a, b) ->
+      Pair_green (ensure_green_path a, ensure_green_path b)
 
 let regular_of_semi
 : type a. a semi -> a t

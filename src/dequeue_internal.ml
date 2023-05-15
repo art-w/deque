@@ -6,12 +6,6 @@ type ('a, 'color) buffer =
   | B4 : 'a * 'a * 'a * 'a      -> ('a, [`yellow]) buffer
   | B5 : 'a * 'a * 'a * 'a * 'a -> ('a, [`red   ]) buffer
 
-type 'a yellow_buffer =
-  Yellowish : ('a, [< `green | `yellow]) buffer -> 'a yellow_buffer
-
-type 'a any_buffer =
-  Any : ('a, [< `green | `yellow | `red ]) buffer -> 'a any_buffer
-
 type ('a, 'b, 'color) deque =
   | HOLE : ('a, 'a, [`kont]) deque
 
@@ -43,6 +37,13 @@ type ('a, 'color) kont =
      -> ('a, [`red]) kont
 
 type 'a s = T : ('a, [< `green | `yellow]) kont -> 'a s
+
+
+type 'a yellow_buffer =
+  Yellowish : ('a, [< `green | `yellow]) buffer -> 'a yellow_buffer
+
+type 'a any_buffer =
+  Any : ('a, [< `green | `yellow | `red ]) buffer -> 'a any_buffer
 
 let green_prefix_cons
 : type a. a -> (a, [`green]) buffer -> (a, [`yellow]) buffer
