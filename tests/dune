@@ -32,3 +32,8 @@
   (name deckrev_test)
   (modules deckrev_test)
   (libraries deque deckrev_internal dequeue_internal))
+
+(executable
+  (name dequeue_arrow_test)
+  (modules dequeue_arrow_test)
+  (libraries dequeue_arrow))
